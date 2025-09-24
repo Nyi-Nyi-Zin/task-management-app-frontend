@@ -1,4 +1,4 @@
-import { useSelector } from "react-redux";
+import { useSelector, TypedUseSelectorHook } from "react-redux";
 import { useEffect, useState, useRef } from "react";
 import {
   fetchBoards,
@@ -7,9 +7,11 @@ import {
   deleteBoard,
 } from "../../apicalls/board";
 import Board from "../../components/Profile/Board";
+import { RootState } from "../../store/store";
 
 function Index() {
-  const { user } = useSelector((state) => state.reducer.user);
+  const useTypedSelector: TypedUseSelectorHook<RootState> = useSelector;
+  const { user } = useTypedSelector((state) => state.reducer.user);
   const [isLoading, setIsLoading] = useState(false);
   const [board, setBoards] = useState([]);
   const [showForm, setShowForm] = useState(false);
