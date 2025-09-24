@@ -1,10 +1,14 @@
-import React, { useEffect } from "react";
+import React, { ReactNode, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setUser } from "../store/slices/userSlice";
 import { checkCurrentUser } from "../apicalls/auth";
 
-const AuthProvider = ({ children }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -19,12 +23,13 @@ const AuthProvider = ({ children }) => {
         navigate("/");
         throw new Error(response.message);
       }
-    } catch (err) {
-      console.log(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(message);
     }
   };
 
-  useEffect((_) => {
+  useEffect(() => {
     getCurrentUser();
   }, []);
   return <section>{children}</section>;
