@@ -1,4 +1,4 @@
-import CardBox from "../../components/Profile/CardBox";
+import CardBox from "./CardBox";
 import CustomizedMenus from "../Menu";
 import { styled } from "@mui/material/styles";
 import {
