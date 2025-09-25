@@ -4,6 +4,7 @@ import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import BoardCard from "./BoardCard";
+import SearchBar from "../SearchBox";
 
 function Board({
   showForm,
@@ -24,7 +25,7 @@ function Board({
   const { user } = useSelector((state) => state.reducer.user);
 
   return (
-    <section className=" min-h-screen " style={{ paddingTop: "100px" }}>
+    <section className=" min-h-screen ">
       {user ? (
         <>
           <p className="text-blue-600 text-4xl font-bold flex justify-center items-center h-20 w-full">
