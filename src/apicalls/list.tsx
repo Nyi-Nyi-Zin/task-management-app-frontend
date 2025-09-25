@@ -1,7 +1,5 @@
 import { axiosInstance } from "./axiosInstance";
 
-//create new list
-//hook used
 export const createNewList = async (payload) => {
   try {
     const response = await axiosInstance.post("/board/create-list", payload);

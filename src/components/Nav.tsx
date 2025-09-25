@@ -109,6 +109,7 @@ const Nav = () => {
                 onClick={handleClose}
                 transformOrigin={{ horizontal: "right", vertical: "top" }}
                 anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+                disableScrollLock={true}
               >
                 <MenuItem>
                   <Typography textAlign="center">{user.email}</Typography>

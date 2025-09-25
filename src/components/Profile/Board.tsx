@@ -4,7 +4,7 @@ import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import BoardCard from "./BoardCard";
-import SearchBar from "../SearchBox";
+import Title from "../common/Title";
 
 function Board({
   showForm,
@@ -25,15 +25,12 @@ function Board({
   const { user } = useSelector((state) => state.reducer.user);
 
   return (
-    <section className=" min-h-screen ">
+    <section className="min-h-screen flex justify-center items-start">
       {user ? (
         <>
-          <p className="text-blue-600 text-4xl font-bold flex justify-center items-center h-20 w-full">
-            Your Boards
-          </p>
-
-          <section className="flex flex-col items-center justify-center gap-3 w-[100%] ">
-            <div className="flex justify-end ">
+          <section className="w-full max-w-[1000px] mx-auto my-5">
+            {/* Create New Board Button */}
+            {/* <div className="flex justify-end  px-4">
               <Button
                 onClick={() => {
                   setShowForm(true);
@@ -43,8 +40,10 @@ function Board({
               >
                 Create New Board
               </Button>
-            </div>
-            {showForm ? (
+            </div> */}
+            <Title>YOUR WORKSPACES</Title>
+            {/* New Board Form */}
+            {showForm && (
               <Box
                 className="flex justify-end"
                 component="form"
@@ -72,52 +71,43 @@ function Board({
                   OK
                 </Button>
               </Box>
-            ) : (
-              <></>
             )}
             {isLoading ? (
-              <>
-                <Box sx={{ display: "flex" }}>
-                  <CircularProgress />
-                </Box>
-              </>
+              <Box sx={{ display: "flex" }}>
+                <CircularProgress />
+              </Box>
             ) : (
               <>
                 {board.length < 1 ? (
-                  <>
-                    <p className=" h-50 flex justify-center items-center text-4xl text-blue-700">
-                      No Boards To Show
-                    </p>
-                  </>
+                  <p className="h-50 flex justify-center items-center text-xl sm:text-2xl md:text-3xl lg:text-4xl text-blue-700">
+                    No Boards To Show
+                  </p>
                 ) : (
-                  <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 w-full">
                     {board.map((item) => (
                       <BoardCard
-                        item={item}
                         key={item.id}
+                        item={item}
                         editingBoardId={editingBoardId}
-                        setEditingBoardId={setEditingBoardId}
-                        setEditingTitle={setEditingTitle}
-                        editingTitle={editingTitle}
                         handleUpdateBoard={handleUpdateBoard}
                         handleDeleteBoard={handleDeleteBoard}
+                        setEditingTitle={setEditingTitle}
+                        setEditingBoardId={setEditingBoardId}
+                        editingTitle={editingTitle}
                       />
                     ))}
-                  </>
+                  </div>
                 )}
               </>
             )}
-            <div className="mt-50"></div>
           </section>
         </>
       ) : (
-        <>
-          <section className="flex justify-center items-center h-[87vh]">
-            <p className=" text-blue-600 text-4xl mb-10 text-center">
-              Login or Register to Start Manage Your Tasks
-            </p>
-          </section>
-        </>
+        <section className="flex justify-center items-center h-[87vh]">
+          <p className="text-blue-600 text-4xl mb-10 text-center">
+            Login or Register to Start Manage Your Tasks
+          </p>
+        </section>
       )}
     </section>
   );
