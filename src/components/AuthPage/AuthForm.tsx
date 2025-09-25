@@ -1,148 +1,200 @@
-import { TextField, Button, Box } from "@mui/material";
-import { loginUser, registerUser } from "../../apicalls/auth";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { setUser } from "../../store/slices/userSlice";
 import { useState } from "react";
-import IconButton from "@mui/material/IconButton";
-import { Alert } from "@mui/material";
-import InputAdornment from "@mui/material/InputAdornment";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import BgImage from "../../../public/Bg_image.png";
 
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  CircularProgress,
+  Link,
+  Alert,
+} from "@mui/material";
+import { useDispatch } from "react-redux";
+import { loginUser, registerUser } from "../../apicalls/auth";
+import { LoginPayload, LoginResponse } from "../../types/Auth";
 
-const AuthForm = ({ isLoginPage }) => {
+interface AuthFormProps {
+  isLoginPage: boolean;
+}
+
+const AuthForm = ({ isLoginPage }: AuthFormProps) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState("");
-  const [severity, setSeverity] = useState("success");
   const [processing, setProcessing] = useState(false);
+  const [message, setMessage] = useState("");
+  const [severity, setSeverity] = useState<"success" | "error">("success");
+  const [open, setOpen] = useState(false);
 
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
+  const handleClickShowPassword = () => setShowPassword(!showPassword);
 
-  const handleOnSubmit = async (event) => {
-    setProcessing(true);
+  const handleOnSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setProcessing(true);
 
     const formData = new FormData(event.currentTarget);
-    const values = {
-      email: formData.get("email"),
-      password: formData.get("password"),
+    const values: LoginPayload = {
+      email: (formData.get("email") as string) || "",
+      password: (formData.get("password") as string) || "",
     };
 
-    if (isLoginPage) {
-      try {
-        const response = await loginUser(values);
+    try {
+      if (isLoginPage) {
+        const response: LoginResponse = await loginUser(values);
 
         if (response.isSuccess) {
-          setMessage(response.message);
+          setMessage(response.message ?? "Login successful!");
           setSeverity("success");
           setOpen(true);
           localStorage.setItem("token", response.token);
-          //AuthProvider ထဲမှာ setUser ကိုသုံးပေးပြီးသားမို့မလိုအပ်တော့
-          // dispatch(setUser(response.user));
-          // console.log(response.user)
           navigate("/profile");
         } else {
-          throw new Error(response.message);
+          throw new Error(response.message ?? "Login failed");
         }
-      } catch (err) {
-        setMessage(err.message);
-        setSeverity("error");
-        setOpen(true);
-      }
-      setProcessing(false);
-    } else {
-      setProcessing(true);
-      try {
+      } else {
         const response = await registerUser(values);
+
         if (response.isSuccess) {
-          setMessage(response.message);
+          setMessage(response.message ?? "Registration successful!");
           setSeverity("success");
           setOpen(true);
-          setTimeout(() => {
-            navigate("/login");
-          }, 2000);
+          setTimeout(() => navigate("/login"), 2000);
         } else {
-          throw new Error(response.message);
+          throw new Error(response.message ?? "Registration failed");
         }
-      } catch (err) {
-        setMessage(err.message);
-        setSeverity("error");
-        setOpen(true);
       }
+    } catch (err: any) {
+      setMessage(err?.message ?? "An error occurred.");
+      setSeverity("error");
+      setOpen(true);
+    } finally {
+      setProcessing(false);
     }
-    setProcessing(false);
   };
 
   return (
-    <section className="w-full flex justify-center items-center min-h-screen flex-col px-4 pt-10">
-      <h1 className="text-3xl font-bold mb-4 text-blue-600  text-center w-full ">
-        {isLoginPage ? "LOGIN" : "REGISTER"}
-      </h1>
+    <Box sx={{ minHeight: "100vh", display: "flex" }}>
+      <Box
+        sx={{
+          flex: 1,
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          bgcolor: "grey.100",
+        }}
+      >
+        <img
+          src={BgImage}
+          alt="Bg image"
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      </Box>
 
-      <div className="w-full max-w-sm" style={{ marginBottom: "150px" }}>
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 4,
+        }}
+      >
         <Box
-          component="form"
-          onSubmit={handleOnSubmit}
           sx={{
-            borderRadius: 1,
+            width: "100%",
+            maxWidth: 400,
+            p: 4,
+            borderRadius: 2,
+            bgcolor: "background.paper",
           }}
-          className=" w-full p-4"
         >
+          <Typography variant="h5" textAlign="center" fontWeight="bold">
+            {isLoginPage ? "Welcome Back" : "Create Account"}
+          </Typography>
+          <Typography
+            variant="body2"
+            textAlign="center"
+            color="text.secondary"
+            mb={2}
+          >
+            {isLoginPage
+              ? "Enter your credentials to access your account"
+              : "Fill in the form to create a new account"}
+          </Typography>
+
           {open && (
-            <Alert severity={severity} sx={{ mb: 2 }} className="w-full">
+            <Alert
+              severity={severity}
+              sx={{ mb: 2 }}
+              onClose={() => setOpen(false)}
+            >
               {message}
             </Alert>
           )}
-          <TextField
-            label="Email"
-            name="email"
-            type="email"
-            required
-            fullWidth
-            className="w-full max-w-md p-2 text-base sm:text-sm sm:p-1  "
-            margin="normal"
-          />
 
-          <TextField
-            label="Password"
-            name="password"
-            type={showPassword ? "text" : "password"}
-            required
-            className="w-full max-w-md p-2 text-base sm:text-sm sm:p-1"
-            margin="normal"
-            variant="outlined"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton onClick={handleClickShowPassword} edge="end">
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
+          <Box component="form" onSubmit={handleOnSubmit}>
+            <TextField
+              fullWidth
+              label="Email"
+              name="email"
+              type="email"
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="Password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              margin="normal"
+              required
+            />
 
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={processing}
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              fullWidth
+              sx={{ mt: 2 }}
+              disabled={processing}
+              startIcon={processing && <CircularProgress size={20} />}
+            >
+              {processing
+                ? isLoginPage
+                  ? "Signing In..."
+                  : "Signing Up..."
+                : isLoginPage
+                ? "Sign In"
+                : "Sign Up"}
+            </Button>
+          </Box>
+
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            textAlign="center"
+            sx={{ mt: 3 }}
           >
-            {isLoginPage && !processing && "Login"}
-            {!isLoginPage && !processing && "Register"}
-            {processing && isLoginPage && "Logging in ..."}
-            {processing && !isLoginPage && "Registering ..."}
-          </Button>
+            {isLoginPage
+              ? "Don't have an account?"
+              : "Already have an account?"}
+            <Link
+              component={RouterLink}
+              to={isLoginPage ? "/register" : "/login"}
+              underline="hover"
+              fontWeight="medium"
+              sx={{ ml: 0.5 }}
+            >
+              {isLoginPage ? "Sign up" : "Sign in"}
+            </Link>
+          </Typography>
         </Box>
-      </div>
-    </section>
+      </Box>
+    </Box>
   );
 };
 

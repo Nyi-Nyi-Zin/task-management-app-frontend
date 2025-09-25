@@ -1,4 +1,5 @@
 import AuthForm from "../../components/AuthPage/AuthForm";
+
 const Register = () => {
   return <AuthForm isLoginPage={false} />;
 };

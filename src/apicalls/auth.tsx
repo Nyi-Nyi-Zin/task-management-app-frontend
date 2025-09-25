@@ -1,4 +1,9 @@
-import { LoginPayload, RegisterPayload } from "../types/Auth";
+import {
+  LoginPayload,
+  LoginResponse,
+  RegisterPayload,
+  RegisterResponse,
+} from "../types/Auth";
 import { ApiResponse } from "../types/Auth";
 import { User } from "../types/User";
 import { axiosInstance } from "./axiosInstance";
@@ -6,30 +11,27 @@ import { AxiosError } from "axios";
 
 export const registerUser = async (
   payload: RegisterPayload
-): Promise<ApiResponse<User>> => {
+): Promise<RegisterResponse> => {
   try {
-    const response = await axiosInstance.post<ApiResponse<User>>(
+    const response = await axiosInstance.post<RegisterResponse>(
       "/register",
       payload
     );
     return response.data;
   } catch (err) {
-    const error = err as AxiosError<ApiResponse<User>>;
+    const error = err as AxiosError<RegisterResponse>;
     throw error.response?.data ?? { success: false, message: "Unknown error" };
   }
 };
 
 export const loginUser = async (
   payload: LoginPayload
-): Promise<ApiResponse<User>> => {
+): Promise<LoginResponse> => {
   try {
-    const response = await axiosInstance.post<ApiResponse<User>>(
-      "/login",
-      payload
-    );
+    const response = await axiosInstance.post<LoginResponse>("/login", payload);
     return response.data;
   } catch (err) {
-    const error = err as AxiosError<ApiResponse<User>>;
+    const error = err as AxiosError<LoginResponse>;
     throw error.response?.data ?? { success: false, message: "Unknown error" };
   }
 };
