@@ -1,10 +1,9 @@
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
-import { CardActions } from "@mui/material";
 import Button from "@mui/material/Button";
-import { useNavigate } from "react-router-dom";
 import TextField from "@mui/material/TextField";
+import { useNavigate } from "react-router-dom";
 
 function BoardCard({
   item,
@@ -16,74 +15,54 @@ function BoardCard({
   handleDeleteBoard,
 }) {
   const navigate = useNavigate();
+
   return (
     <Card
       key={item.id}
-      sx={{ minWidth: 275 }}
-      className="mt-4 cursor-pointer "
-      classes={{ root: "w-[80%] bg-amber-200" }}
+      className="cursor-pointer h-40 w-full flex flex-col justify-between overflow-hidden rounded-lg shadow-md "
       onClick={() => {
         navigate(`/board/${item.id}`);
       }}
     >
-      <div className="hover:bg-gray-200">
-        <CardContent>
-          {editingBoardId === item.id ? (
-            <div className="flex gap-1 ">
-              <TextField
-                fullWidth
-                value={editingTitle}
-                onChange={(e) => {
-                  setEditingTitle(e.target.value);
-                }}
-                onClick={(e) => e.stopPropagation()}
-              />
-              <Button
-                size="small"
-                variant="contained"
-                onClick={(e) => {
-                  handleUpdateBoard(item.id, editingTitle);
-                  e.stopPropagation();
-                }}
-              >
-                OK
-              </Button>
-            </div>
-          ) : (
-            <Typography
-              variant="body2"
-              style={{
-                wordWrap: "break-word",
-                whiteSpace: "normal",
-              }}
-            >
-              {item.title}
-            </Typography>
-          )}
-        </CardContent>
-        <CardActions>
-          <Button
-            size="small"
-            onClick={(e) => {
-              setEditingBoardId(item.id);
-              setEditingTitle(item.title);
-              e.stopPropagation();
-            }}
-          >
-            Edit
-          </Button>
-          <Button
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteBoard(item.id);
-            }}
-          >
-            Delete
-          </Button>
-        </CardActions>
+      <div className="h-[70%] w-full">
+        <img
+          src="../../../public/Bg_image.png"
+          alt="img"
+          className="w-full h-full object-cover"
+        />
       </div>
+
+      <CardContent className="h-[30%] p-2 flex items-center justify-center  text-start ">
+        {editingBoardId === item.id ? (
+          <div
+            className="flex gap-2 w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <TextField
+              fullWidth
+              size="small"
+              value={editingTitle}
+              onChange={(e) => setEditingTitle(e.target.value)}
+            />
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => handleUpdateBoard(item.id, editingTitle)}
+            >
+              OK
+            </Button>
+          </div>
+        ) : (
+          <Typography
+            variant="body2"
+            className="truncate text-center w-full text-start"
+          >
+            {item.title}
+          </Typography>
+        )}
+      </CardContent>
     </Card>
   );
 }
+
 export default BoardCard;
