@@ -1,4 +1,8 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from "react-router-dom";
 import Main from "./layouts/Main";
 
 import Register from "./pages/Auth/Register";
@@ -16,19 +20,15 @@ function App() {
       children: [
         {
           index: true,
-          element: (
-            <AuthProvider>
-              <Profile />
-            </AuthProvider>
-          ),
-        },
-        {
-          path: "/register",
-          element: <Register />,
+          element: <Navigate to="/login" replace />,
         },
         {
           path: "/login",
           element: <Login />,
+        },
+        {
+          path: "/register",
+          element: <Register />,
         },
         {
           path: "/profile",
@@ -46,7 +46,6 @@ function App() {
             </AuthProvider>
           ),
         },
-
         {
           path: "*",
           element: <ErrorPage />,
@@ -54,6 +53,7 @@ function App() {
       ],
     },
   ]);
+
   return <RouterProvider router={router} />;
 }
 
