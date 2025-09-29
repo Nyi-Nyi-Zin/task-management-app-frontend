@@ -60,13 +60,14 @@ function CardBox({
   };
 
   return (
-    <section className="max-h-screen">
+    <section className="max-h-screen ">
       <Box
         sx={{
           maxHeight: 260,
           overflowY: "auto",
           marginTop: 1,
           marginBottom: 1,
+          
         }}
       >
         {cardsByList[list.id] && cardsByList[list.id].length > 0 ? (

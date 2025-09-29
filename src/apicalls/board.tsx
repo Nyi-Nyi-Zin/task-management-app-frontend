@@ -8,17 +8,22 @@ import {
 
 export const createBoard = async (
   payload: CreateBoardRequest
-): Promise<ApiResponse<BoardType>> => {
-  return handleRequest(
-    axiosInstance.post<ApiResponse<BoardType>>("/create-board", payload)
-  );
+): Promise<BoardType> => {
+  const res = await axiosInstance.post<BoardType>("/create-board", payload);
+  return res.data;
 };
 
-export const fetchBoards = async (
-  userId: string
-): Promise<ApiResponse<BoardType[]>> => {
+// export const fetchBoards = async (
+//   userId: number
+// ): Promise<ApiResponse<BoardType[]>> => {
+//   return handleRequest(
+//     axiosInstance.get<ApiResponse<BoardType[]>>(`/get-boards`)
+//   );
+// };
+
+export const fetchBoards = async (): Promise<ApiResponse<BoardType[]>> => {
   return handleRequest(
-    axiosInstance.get<ApiResponse<BoardType[]>>(`/get-boards?userId=${userId}`)
+    axiosInstance.get<ApiResponse<BoardType[]>>("/get-boards")
   );
 };
 

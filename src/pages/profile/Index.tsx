@@ -9,6 +9,23 @@ import {
 import Board from "../../components/Profile/Board";
 import { RootState } from "../../store/store";
 
+
+ export const handleNewBoard = async () => {
+    try {
+      const response = await createBoard({
+        title: boardName,
+        userId: user.id,
+      });
+      if (response.isSuccess) {
+        setBoardName("");
+        setShowForm(false);
+        fetchAllBoards();
+      }
+    } catch (error) {
+      console.error("Error creating board:", error);
+    }
+  };
+
 function Index() {
   const useTypedSelector: TypedUseSelectorHook<RootState> = useSelector;
   const { user } = useTypedSelector((state) => state.reducer.user);
@@ -18,6 +35,7 @@ function Index() {
   const [boardName, setBoardName] = useState("");
   const [editingBoardId, setEditingBoardId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
+
 
   const textFieldRef = useRef(null);
 
@@ -49,21 +67,7 @@ function Index() {
     }
   }, [showForm]);
 
-  const handleNewBoard = async () => {
-    try {
-      const response = await createBoard({
-        title: boardName,
-        userId: user.id,
-      });
-      if (response.isSuccess) {
-        setBoardName("");
-        setShowForm(false);
-        fetchAllBoards();
-      }
-    } catch (error) {
-      console.error("Error creating board:", error);
-    }
-  };
+
 
   const handleUpdateBoard = async (id, title) => {
     try {

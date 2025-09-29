@@ -6,14 +6,22 @@ import { persistStore } from "redux-persist";
 import { Provider } from "react-redux";
 import store from "./store/store.js";
 import { PersistGate } from "redux-persist/integration/react";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from "@tanstack/react-query";
 
+const queryClient = new QueryClient();
 const persistor = persistStore(store);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>
       <PersistGate persistor={persistor}>
-        <App />
+        <QueryClientProvider client={queryClient}>
+          <App />
+        </QueryClientProvider>
       </PersistGate>
     </Provider>
   </StrictMode>

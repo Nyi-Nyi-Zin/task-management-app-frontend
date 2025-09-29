@@ -7,9 +7,12 @@ const Main = () => {
   const hideNavbarPaths = ["/login", "/register"];
   const shouldHideNavbar = hideNavbarPaths.includes(location.pathname);
 
+  
+
   return (
-    <section className="mx-auto min-h-screen w-full ">
+    <section className="mx-auto w-full  ">
       {!shouldHideNavbar && <Nav />}
+      
       <Outlet />
     </section>
   );

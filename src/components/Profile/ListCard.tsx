@@ -9,6 +9,7 @@ import {
   TextField,
   Button,
 } from "@mui/material";
+import { blue } from "@mui/material/colors";
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: "#fff",
@@ -55,8 +56,8 @@ function ListCard({
   setEditMode,
 }) {
   return (
-    <div key={list.id}>
-      <Item className="min-w-[300px] max-w-[300px]">
+    <div key={list.id} className="">
+      <Item className="min-w-[300px] max-w-[300px] ">
         <Box
           sx={{
             display: "flex",
@@ -64,6 +65,8 @@ function ListCard({
             alignItems: "center",
             mb: 1,
             gap: 0,
+         
+          
           }}
         >
           <Typography

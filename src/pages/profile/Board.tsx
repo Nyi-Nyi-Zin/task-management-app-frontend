@@ -198,8 +198,8 @@ export default function Board() {
   }, [allLists, selectedCard]);
 
   return (
-    <>
-      <div className="bg-green-100">
+    <section className=" flex justify-center items-start ">
+      <div className="w-full  mx-auto">
         <List
           boardDetails={boardDetails}
           allLists={allLists}
@@ -239,6 +239,6 @@ export default function Board() {
           getOldTitle={getOldTitle}
         />
       </div>
-    </>
+    </section>
   );
 }

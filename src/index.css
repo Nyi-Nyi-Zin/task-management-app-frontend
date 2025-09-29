@@ -21,3 +21,11 @@ body {
   /* background: #eef4ff; */
   font-family: "Poppins", "Noto Sans Myanmar", "Myanmar Text", sans-serif;
 }
+
+/* html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+
+   overflow-y: hidden;
+} */
