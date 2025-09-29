@@ -12,6 +12,7 @@ import Profile from "./pages/profile/Index";
 import Board from "./pages/profile/Board";
 import ErrorPage from "./pages/ErrorPage";
 
+
 function App() {
   const router = createBrowserRouter([
     {

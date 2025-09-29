@@ -1,115 +1,74 @@
-import Button from "@mui/material/Button";
+import { useState } from "react";
 import { useSelector } from "react-redux";
-import TextField from "@mui/material/TextField";
-import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
+import { Card, Box, CircularProgress } from "@mui/material";
 import BoardCard from "./BoardCard";
 import Title from "../common/Title";
+import { useFetchBoards } from "../../hooks/useBoard";
+import { RootState } from "../../store/store";
 
-function Board({
-  showForm,
-  isLoading,
-  board,
-  editingBoardId,
-  handleNewBoard,
-  handleUpdateBoard,
-  handleDeleteBoard,
-  setShowForm,
-  textFieldRef,
-  boardName,
-  setBoardName,
-  setEditingTitle,
-  setEditingBoardId,
-  editingTitle,
-}) {
-  const { user } = useSelector((state) => state.reducer.user);
+function Board() {
+  const { user } = useSelector((state: RootState) => state.reducer.user);
+
+  // ✅ fetchBoards no longer needs userId
+  const { data, isPending } = useFetchBoards();
+  console.log(data);
+  const boards = data ?? [];
+
+  const [editingBoardId, setEditingBoardId] = useState<number | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+
+  const handleUpdateBoard = (id: number, newTitle: string) => {
+    // TODO: Integrate updateBoard mutation here
+    console.log("Update board", id, newTitle);
+    setEditingBoardId(null);
+    setEditingTitle("");
+  };
+
+  const handleDeleteBoard = (id: number) => {
+    // TODO: Integrate deleteBoard mutation here
+    console.log("Delete board", id);
+  };
 
   return (
     <section className="min-h-screen flex justify-center items-start">
-      {user ? (
-        <>
-          <section className="w-full max-w-[1000px] mx-auto my-5">
-            {/* Create New Board Button */}
-            {/* <div className="flex justify-end  px-4">
-              <Button
-                onClick={() => {
-                  setShowForm(true);
-                }}
-                size="large"
-                variant="contained"
-              >
-                Create New Board
-              </Button>
-            </div> */}
-            <Title>YOUR WORKSPACES</Title>
-            {/* New Board Form */}
-            {showForm && (
-              <Box
-                className="flex justify-end"
-                component="form"
-                sx={{ "& > :not(style)": { m: 1, width: "25ch" } }}
-                noValidate
-                autoComplete="off"
-              >
-                <TextField
-                  inputRef={textFieldRef}
-                  id="outlined-basic"
-                  label="Board Name"
-                  variant="outlined"
-                  value={boardName}
-                  onChange={(e) => setBoardName(e.target.value)}
+      {user && (
+        <Card className="w-full max-w-[1000px] rounded border-1 border-zinc-300 p-3 ">
+          <Title>YOUR WORKSPACES</Title>
+
+          {isPending ? (
+            <Box sx={{ display: "flex" }}>
+              <CircularProgress />
+            </Box>
+          ) : boards.length < 1 ? (
+            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-blue-700 text-center">
+              No Boards To Show
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 w-full">
+              {boards.map((item) => (
+                <BoardCard
+                  key={item.id}
+                  item={item}
+                  editingBoardId={editingBoardId}
+                  editingTitle={editingTitle}
+                  setEditingBoardId={setEditingBoardId}
+                  setEditingTitle={setEditingTitle}
+                  handleUpdateBoard={handleUpdateBoard}
+                  handleDeleteBoard={handleDeleteBoard}
                 />
-                <Button
-                  size="small"
-                  variant="outlined"
-                  sx={{ width: "5ch !important", m: 1 }}
-                  onClick={() => {
-                    setShowForm(false);
-                    handleNewBoard();
-                  }}
-                >
-                  OK
-                </Button>
-              </Box>
-            )}
-            {isLoading ? (
-              <Box sx={{ display: "flex" }}>
-                <CircularProgress />
-              </Box>
-            ) : (
-              <>
-                {board.length < 1 ? (
-                  <p className="h-50 flex justify-center items-center text-xl sm:text-2xl md:text-3xl lg:text-4xl text-blue-700">
-                    No Boards To Show
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-4 w-full">
-                    {board.map((item) => (
-                      <BoardCard
-                        key={item.id}
-                        item={item}
-                        editingBoardId={editingBoardId}
-                        handleUpdateBoard={handleUpdateBoard}
-                        handleDeleteBoard={handleDeleteBoard}
-                        setEditingTitle={setEditingTitle}
-                        setEditingBoardId={setEditingBoardId}
-                        editingTitle={editingTitle}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </section>
-        </>
-      ) : (
-        <section className="flex justify-center items-center h-[87vh]">
-          <p className="text-blue-600 text-4xl mb-10 text-center">
-            Login or Register to Start Manage Your Tasks
-          </p>
-        </section>
+              ))}
+            </div>
+          )}
+        </Card>
+        //   ) : (
+        //     <section className="flex justify-center items-center h-[87vh]">
+        //       <p className="text-blue-600 text-4xl mb-10 text-center">
+        //         Login or Register to Start Manage Your Tasks
+        //       </p>
+        //     </section>
       )}
     </section>
   );
 }
+
 export default Board;
