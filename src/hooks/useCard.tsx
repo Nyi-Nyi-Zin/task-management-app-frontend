@@ -1,127 +1,108 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createCard,
   fetchAllCards,
   fetchOldCardsTitle,
   updateCard,
   deleteCard,
+  CardResponse,
 } from "../apicalls/card";
+import { toast } from "sonner";
 
-export const useCard = () => {
+export const useCard = (listId?: string) => {
   const [editingCardTitle, setEditingCardTitle] = useState("");
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [editingCardDesc, setEditingCardDesc] = useState("");
+  const queryClient = useQueryClient();
 
-  const fetchCards = async (listId) => {
-    try {
-      setLoading(true);
-      const response = await fetchAllCards(listId);
-      if (response.isSuccess) {
-        return response.cards;
-      } else {
-        setError(response.message);
-        return [];
-      }
-    } catch (err) {
-      setError(err.message || "Failed to fetch cards.");
-      return [];
-    } finally {
-      setLoading(false);
+  const {
+    data: cardsData,
+    isLoading,
+    error,
+  } = useQuery<CardResponse, any, CardResponse>({
+    queryKey: ["cards", listId ?? ""],
+    queryFn: () => fetchAllCards(listId || ""),
+    enabled: !!listId,
+  });
+
+  useEffect(() => {
+    if (error) {
+      toast.error((error as any)?.message ?? "Failed to fetch cards");
     }
-  };
+  }, [error]);
 
-  const create = async (listId, title) => {
-    if (!title) return;
-    try {
-      const response = await createCard({ listId, title });
-      if (response.isSuccess) {
-        await fetchCards(listId);
-      } else {
-        setError(response.message);
-      }
-    } catch (err) {
-      setError(err.message || "Failed to create card.");
-    }
-  };
+  const createMutation = useMutation<
+    CardResponse,
+    any,
+    { listId: string; title: string }
+  >({
+    mutationFn: (payload: { listId: string; title: string }) =>
+      createCard(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cards", listId ?? ""] });
+      toast.success("Card created");
+    },
+    onError: (err: any) => toast.error(err?.message ?? "Failed to create card"),
+  });
 
-  const update = async (cardId, listId) => {
-    try {
-      const response = await updateCard({
-        cardId,
-        title: editingCardTitle,
-      });
-      if (response.isSuccess) {
-        await fetchCards(listId);
-      } else {
-        setError(response.message);
-      }
-    } catch (err) {
-      setError(err.message || "Failed to update card.");
-    }
-  };
+  const updateMutation = useMutation<
+    CardResponse,
+    any,
+    { cardId: string; title?: string; description?: string }
+  >({
+    mutationFn: (payload: {
+      cardId: string;
+      title?: string;
+      description?: string;
+    }) => updateCard(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cards", listId ?? ""] });
+      toast.success("Card updated");
+    },
+    onError: (err: any) => toast.error(err?.message ?? "Failed to update card"),
+  });
 
-  //update desc
-  const updateDesc = async (cardId, listId, description) => {
-    try {
-      const response = await updateCard({
-        cardId,
-        description,
-      });
-      if (response.isSuccess) {
-        await fetchCards(listId);
-      } else {
-        setError(response.message);
-      }
-    } catch (err) {
-      setError(err.message || "Failed to update card.");
-    }
-  };
+  const deleteMutation = useMutation<CardResponse, any, string>({
+    mutationFn: (cardId: string) => deleteCard(cardId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["cards", listId ?? ""] });
+      toast.success("Card deleted");
+    },
+    onError: (err: any) => toast.error(err?.message ?? "Failed to delete card"),
+  });
 
-  const remove = async (cardId, listId) => {
+  const getOldTitle = async (cardId: string) => {
     try {
-      const response = await deleteCard(cardId);
-      if (response.isSuccess) {
-        return await fetchCards(listId);
-      } else {
-        setError(response.message);
-        return [];
+      const res = await fetchOldCardsTitle(cardId);
+      if (res.isSuccess) {
+        setEditingCardTitle(res.cardTitle ?? "");
+        setEditingCardDesc(res.cardDesc ?? "");
+        return res;
       }
-    } catch (err) {
-      setError(err.message || "Failed to delete card.");
-      return [];
-    }
-  };
-
-  const getOldTitle = async (cardId) => {
-    try {
-      const response = await fetchOldCardsTitle(cardId);
-      console.log("old title & desc", response);
-      if (response.isSuccess) {
-        setEditingCardTitle(response.cardTitle);
-        setEditingCardDesc(response.cardDesc);
-        return response;
-      } else {
-        setError(response.message);
-        return "";
-      }
-    } catch (err) {
-      setError(err.message || "Failed to fetch old card title.");
-      return "";
+      toast.error(res.message ?? "Failed to load card");
+      return null;
+    } catch (err: any) {
+      toast.error(err?.message ?? "Failed to load card");
+      return null;
     }
   };
 
   return {
     editingCardTitle,
     setEditingCardTitle,
-    fetchCards,
-    create,
-    update,
-    remove,
-    getOldTitle,
+    cards: cardsData,
+    cardsList: cardsData?.cards ?? [],
+    isLoading,
     error,
-    loading,
-    updateDesc,
+    create: (title: string) =>
+      createMutation.mutate({ listId: listId || "", title }),
+    update: (cardId: string) =>
+      updateMutation.mutate({ cardId, title: editingCardTitle }),
+    updateDescription: (cardId: string, description: string) =>
+      updateMutation.mutate({ cardId, description }),
+    remove: (cardId: string) => deleteMutation.mutate(cardId),
+    getOldTitle,
     editingCardDesc,
+    setEditingCardDesc,
   };
 };

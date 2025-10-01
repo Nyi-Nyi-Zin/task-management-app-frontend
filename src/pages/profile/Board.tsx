@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { getSingleBoard } from "../../apicalls/board";
 import { useParams } from "react-router-dom";
-import { fetchOldCardsTitle } from "../../apicalls/card";
+import { fetchAllCards, fetchOldCardsTitle, createCard, updateCard, deleteCard } from "../../apicalls/card";
 import { useList } from "../../hooks/useList";
 import { useCard } from "../../hooks/useCard";
 
 import * as React from "react";
-import List from "../../components/Profile/List";
+import Listss from "../../components/Profile/List";
 
 export default function Board() {
   const params = useParams();
@@ -19,22 +19,14 @@ export default function Board() {
     removeList,
     getListTitle,
     loading,
-    editingListTitle,
   } = useList(id);
 
-  const {
-    fetchCards,
-    create,
-    update,
-    remove,
-    editingCardTitle,
-    setEditingCardTitle,
-    updateDesc,
-    getOldTitle,
-  } = useCard();
+  const safeLists = Array.isArray(allLists) ? allLists : [];
 
-  const [selectedCard, setSelectedCard] = useState(null);
-  const [boardDetails, setBoardDetails] = useState({});
+  const { editingCardTitle, setEditingCardTitle, getOldTitle } = useCard();
+
+  const [selectedCard, setSelectedCard] = useState<any>(null);
+  const [boardDetails, setBoardDetails] = useState<any>(undefined);
   const [newListTitle, setNewListTitle] = useState("");
   const [showAddList, setShowAddList] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -51,7 +43,8 @@ export default function Board() {
 
   //get all cards
   const getAllCards = async (listId) => {
-    const cards = await fetchCards(listId);
+    const cardsRes = await fetchAllCards(listId);
+    const cards = cardsRes?.cards ?? [];
     setCardsByList((prev) => ({
       ...prev,
       [listId]: cards,
@@ -63,7 +56,7 @@ export default function Board() {
     try {
       const response = await getSingleBoard(id);
       if (response.isSuccess) {
-        setBoardDetails(response.board);
+        setBoardDetails(response.data);
       } else {
         console.error("Error fetching board details:", response.message);
       }
@@ -95,14 +88,14 @@ export default function Board() {
 
   //create card
   const handleCreateCard = async (listId) => {
-    await create(listId, newCardTitles[listId]);
+    await createCard({ listId, title: newCardTitles[listId] || "" });
     setNewCardTitles((prev) => ({ ...prev, [listId]: "" }));
     await getAllCards(listId);
   };
 
   //handle update card
   const handleUpdateCard = async (cardId, listId, description) => {
-    await update(cardId, listId, description);
+    await updateCard({ cardId, description });
     setCardEditMode(false);
     setEditingCardId(null);
     await getAllCards(listId);
@@ -110,7 +103,7 @@ export default function Board() {
 
   //handle update desc
   const handleUpdateDesc = async (cardId, listId, description) => {
-    await updateDesc(cardId, listId, description);
+    await updateCard({ cardId, description });
     setCardsByList((prev) => ({
       ...prev,
       [listId]: prev[listId].map((card) =>
@@ -166,11 +159,8 @@ export default function Board() {
   //handle delete card
   const handleDeleteCard = async (cardId, listId) => {
     try {
-      const updatedCards = await remove(cardId, listId);
-      setCardsByList((prev) => ({
-        ...prev,
-        [listId]: updatedCards,
-      }));
+      await deleteCard(cardId);
+      await getAllCards(listId);
     } catch (error) {
       console.error("Error deleting card:", error);
     }
@@ -189,55 +179,18 @@ export default function Board() {
   }, [id]);
 
   useEffect(() => {
-    //if lists exist,fetch all cards according to each list
-    if (allLists.length > 0) {
-      allLists.forEach((list) => {
+    //if lists exist, fetch all cards according to each list
+    if (safeLists.length > 0) {
+      safeLists.forEach((list) => {
         getAllCards(list.id);
       });
     }
-  }, [allLists, selectedCard]);
+  }, [safeLists, selectedCard]);
 
   return (
     <section className=" flex justify-center items-start ">
       <div className="w-full  mx-auto">
-        <List
-          boardDetails={boardDetails}
-          allLists={allLists}
-          showAddList={showAddList}
-          editMode={editMode}
-          handleListEdit={handleListEdit}
-          handleDeleteList={handleDeleteList}
-          cardsByList={cardsByList}
-          showAddCardForList={showAddCardForList}
-          cardEditMode={cardEditMode}
-          selectedCard={selectedCard}
-          descEditMode={descEditMode}
-          editCardDesc={editCardDesc}
-          setShowAddList={setShowAddList}
-          newListTitle={newListTitle}
-          handleCreateList={handleCreateList}
-          loading={loading}
-          setNewListTitle={setNewListTitle}
-          editingListId={editingListId}
-          setEditMode={setEditMode}
-          setShowAddCardForList={setShowAddCardForList}
-          newCardTitles={newCardTitles}
-          setNewCardTitles={setNewCardTitles}
-          handleCreateCard={handleCreateCard}
-          handleDeleteCard={handleDeleteCard}
-          setCardEditMode={setCardEditMode}
-          editingCardId={editingCardId}
-          setEditingCardId={setEditingCardId}
-          editingCardTitle={editingCardTitle}
-          setEditingCardTitle={setEditingCardTitle}
-          handleUpdateCard={handleUpdateCard}
-          handleOldCardsTitle={handleOldCardsTitle}
-          setSelectedCard={setSelectedCard}
-          setEditCardDesc={setEditCardDesc}
-          setDescEditMode={setDescEditMode}
-          handleUpdateDesc={handleUpdateDesc}
-          getOldTitle={getOldTitle}
-        />
+        <Listss boardDetails={boardDetails} allLists={safeLists} />
       </div>
     </section>
   );

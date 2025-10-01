@@ -1,98 +1,55 @@
-import { axiosInstance } from "./axiosInstance";
+import { axiosInstance, handleRequest } from "./axiosInstance";
 
-// Create a new card
-//hook used
-export const createCard = async (payload) => {
-  try {
-    const response = await axiosInstance.post(
-      "/board/list/create-card",
-      payload,
-      {
-        validateStatus: () => true,
-      }
-    );
-    return response.data;
-  } catch (error) {
-    throw error.response.data;
-  }
+export interface CardCreatePayload {
+  listId: string;
+  title: string;
+}
+
+export interface CardResponse {
+  isSuccess: boolean;
+  message?: string;
+  cards?: any[];
+  cardTitle?: string;
+  cardDesc?: string;
+}
+
+export const createCard = async (
+  payload: CardCreatePayload
+): Promise<CardResponse> => {
+  return handleRequest(
+    axiosInstance.post<CardResponse>("/board/list/create-card", payload)
+  );
 };
 
-// Fetch all cards
-//hook used
-export const fetchAllCards = async (listId) => {
-  try {
-    const response = await axiosInstance.get(`/board/${listId}/cards`, {
-      validateStatus: () => true,
-    });
-    return response.data;
-  } catch (error) {
-    return {
-      isSuccess: false,
-      message: error.response?.data?.message || "Unknown error",
-    };
-  }
+export const fetchAllCards = async (listId: string): Promise<CardResponse> => {
+  return handleRequest(
+    axiosInstance.get<CardResponse>(`/board/${listId}/cards`)
+  );
 };
 
-//fetch old cards title
-export const fetchOldCardsTitle = async (cardId) => {
-  try {
-    const response = await axiosInstance.get(
-      `/board/list/get-old-card-title/${cardId}`,
-      {
-        validateStatus: () => true,
-      }
-    );
-    return response.data;
-  } catch (error) {
-    throw error.response.data;
-  }
+export const fetchOldCardsTitle = async (
+  cardId: string
+): Promise<CardResponse> => {
+  return handleRequest(
+    axiosInstance.get<CardResponse>(`/board/list/get-old-card-title/${cardId}`)
+  );
 };
 
-// Update card title
-//hook used
-export const updateCard = async (payload) => {
-  try {
-    const response = await axiosInstance.put(
+export const updateCard = async (payload: {
+  cardId: string;
+  title?: string;
+  description?: string;
+}): Promise<CardResponse> => {
+  return handleRequest(
+    axiosInstance.put<CardResponse>(
       `/board/list/update-card/${payload.cardId}`,
-      payload,
-      {
-        validateStatus: () => true,
-      }
-    );
-    return response.data;
-  } catch (error) {
-    throw error.response.data;
-  }
+      payload
+    )
+  );
 };
 
-//update card Desc
-// export const createDesc = async (payload) => {
-//   try {
-//     const response = await axiosInstance.post(
-//       `/board/list/create-card-desc/${payload.cardId}`,
-//       payload,
-//       {
-//         validateStatus: () => true,
-//       }
-//     );
-//     return response.data;
-//   } catch (error) {
-//     throw error.response.data;
-//   }
-// };
-
-//delete card
-//hook used
-export const deleteCard = async (cardId) => {
-  try {
-    const response = await axiosInstance.delete(
-      `/board/list/delete-card/${cardId}`,
-      {
-        validateStatus: () => true,
-      }
-    );
-    return response.data;
-  } catch (error) {
-    throw error.response.data;
-  }
+export const deleteCard = async (cardId: string): Promise<CardResponse> => {
+  return handleRequest(
+    axiosInstance.delete<CardResponse>(`/board/list/delete-card/${cardId}`)
+  );
 };

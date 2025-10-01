@@ -1,56 +1,44 @@
-import {
-  LoginPayload,
-  LoginResponse,
-  RegisterPayload,
-  RegisterResponse,
-} from "../types/Auth";
 import { ApiResponse } from "../types/Auth";
 import { User } from "../types/User";
-import { axiosInstance } from "./axiosInstance";
-import { AxiosError } from "axios";
+import { axiosInstance, handleRequest, validate } from "./axiosInstance";
+import {
+  LoginPayloadSchema,
+  RegisterPayloadSchema,
+  LoginResponseSchema,
+  RegisterResponseSchema,
+  type LoginPayload,
+  type RegisterPayload,
+} from "../schema/auth";
 
-export const registerUser = async (
-  payload: RegisterPayload
-): Promise<RegisterResponse> => {
-  try {
-    const response = await axiosInstance.post<RegisterResponse>(
-      "/register",
-      payload
-    );
-    return response.data;
-  } catch (err) {
-    const error = err as AxiosError<RegisterResponse>;
-    throw error.response?.data ?? { success: false, message: "Unknown error" };
-  }
+export const registerUser = async (payload: RegisterPayload) => {
+  const safePayload = validate(payload, RegisterPayloadSchema);
+  const data = await handleRequest(
+    axiosInstance.post("/register", safePayload)
+  );
+  return validate(data, RegisterResponseSchema);
 };
 
-export const loginUser = async (
-  payload: LoginPayload
-): Promise<LoginResponse> => {
-  try {
-    const response = await axiosInstance.post<LoginResponse>("/login", payload);
-    return response.data;
-  } catch (err) {
-    const error = err as AxiosError<LoginResponse>;
-    throw error.response?.data ?? { success: false, message: "Unknown error" };
-  }
+export const loginUser = async (payload: LoginPayload) => {
+  const safePayload = validate(payload, LoginPayloadSchema);
+  const data = await handleRequest(axiosInstance.post("/login", safePayload));
+  return validate(data, LoginResponseSchema);
 };
 
-export const checkCurrentUser = async (): Promise<ApiResponse<User>> => {
+export const checkCurrentUser = async (): Promise<
+  ApiResponse<User> | { isSuccess?: false; message?: string; userDoc?: null }
+> => {
   try {
     const response = await axiosInstance.get<ApiResponse<User>>(
       "/get-current-user",
-      {
-        validateStatus: () => true,
-      }
+      { validateStatus: () => true }
     );
     return response.data;
   } catch (err) {
-    const error = err as AxiosError;
+    const error = err as any;
     return {
-      success: false,
-      data: null,
-      message: error.message,
+      isSuccess: false,
+      message: error?.message ?? "Unknown error",
+      userDoc: null,
     };
   }
 };

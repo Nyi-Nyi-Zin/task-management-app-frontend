@@ -9,11 +9,12 @@ import {
   Typography,
   CircularProgress,
   Link,
-  Alert,
 } from "@mui/material";
-import { useDispatch } from "react-redux";
+// import { useDispatch } from "react-redux";
 import { loginUser, registerUser } from "../../apicalls/auth";
 import { LoginPayload, LoginResponse } from "../../types/Auth";
+import { z } from "zod";
+import { toast } from "sonner";
 
 interface AuthFormProps {
   isLoginPage: boolean;
@@ -21,13 +22,11 @@ interface AuthFormProps {
 
 const AuthForm = ({ isLoginPage }: AuthFormProps) => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
   const [showPassword, setShowPassword] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [message, setMessage] = useState("");
-  const [severity, setSeverity] = useState<"success" | "error">("success");
-  const [open, setOpen] = useState(false);
+  // Feedback handled via sonner toasts; no local alert state needed
 
   const handleClickShowPassword = () => setShowPassword(!showPassword);
 
@@ -41,35 +40,46 @@ const AuthForm = ({ isLoginPage }: AuthFormProps) => {
       password: (formData.get("password") as string) || "",
     };
 
+    const AuthSchema = z.object({
+      email: z.string().email("Invalid email address"),
+      password: z.string().min(6, "Password must be at least 6 characters"),
+    });
+
+    const parseResult = AuthSchema.safeParse(values);
+    if (!parseResult.success) {
+      const firstError =
+        Object.values(parseResult.error.flatten().fieldErrors)[0]?.[0] ||
+        "Invalid input";
+      toast.error(String(firstError));
+      setProcessing(false);
+      return;
+    }
+
     try {
       if (isLoginPage) {
         const response: LoginResponse = await loginUser(values);
 
         if (response.isSuccess) {
-          setMessage(response.message ?? "Login successful!");
-          setSeverity("success");
-          setOpen(true);
+          toast.success(response.message ?? "Login successful!");
           localStorage.setItem("token", response.token);
           navigate("/profile");
         } else {
+          toast.error(response.message ?? "Login failed");
           throw new Error(response.message ?? "Login failed");
         }
       } else {
         const response = await registerUser(values);
 
         if (response.isSuccess) {
-          setMessage(response.message ?? "Registration successful!");
-          setSeverity("success");
-          setOpen(true);
-          setTimeout(() => navigate("/login"), 2000);
+          toast.success(response.message ?? "Registration successful!");
+          setTimeout(() => navigate("/login"), 1200);
         } else {
+          toast.error(response.message ?? "Registration failed");
           throw new Error(response.message ?? "Registration failed");
         }
       }
     } catch (err: any) {
-      setMessage(err?.message ?? "An error occurred.");
-      setSeverity("error");
-      setOpen(true);
+      toast.error(err?.message ?? "An error occurred.");
     } finally {
       setProcessing(false);
     }
@@ -126,15 +136,7 @@ const AuthForm = ({ isLoginPage }: AuthFormProps) => {
               : "Fill in the form to create a new account"}
           </Typography>
 
-          {open && (
-            <Alert
-              severity={severity}
-              sx={{ mb: 2 }}
-              onClose={() => setOpen(false)}
-            >
-              {message}
-            </Alert>
-          )}
+          {/* Sonner toasts are shown globally via Toaster in main.tsx */}
 
           <Box component="form" onSubmit={handleOnSubmit}>
             <TextField

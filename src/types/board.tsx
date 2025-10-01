@@ -1,12 +1,12 @@
 export interface BoardType {
-  id: string;
+  id: string | number;
   title: string;
-  userId: string;
+  userId?: string | number;
 }
 
 export interface CreateBoardRequest {
   title: string;
-  userId: string;
+  userId?: string | number;
 }
 
 export interface UpdateBoardRequest {

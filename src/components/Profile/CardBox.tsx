@@ -5,6 +5,7 @@ import {
   Typography,
   Button,
   TextField,
+  InputAdornment,
 } from "@mui/material";
 import Checkbox from "@mui/material/Checkbox";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -13,9 +14,9 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
-import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { InputAdornment } from "@mui/material";
+import { useState, useMemo } from "react";
+import { useCard } from "../../hooks/useCard";
+import { useNavigate } from "react-router-dom";
 
 function CardBox({
   list,
@@ -43,6 +44,21 @@ function CardBox({
   handleUpdateDesc,
   getOldTitle,
 }) {
+  const {
+    cardsList,
+    create,
+    remove,
+    update,
+    updateDescription,
+    setEditingCardTitle: setHookEditingTitle,
+    editingCardTitle: hookEditingTitle,
+    getOldTitle: hookGetOldTitle,
+  } = useCard(String(list.id));
+
+  const effectiveCards = useMemo(
+    () => cardsByList?.[list.id] ?? cardsList,
+    [cardsByList, list.id, cardsList]
+  );
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -67,21 +83,19 @@ function CardBox({
           overflowY: "auto",
           marginTop: 1,
           marginBottom: 1,
-          
         }}
       >
-        {cardsByList[list.id] && cardsByList[list.id].length > 0 ? (
-          cardsByList[list.id].map((card) => (
+        {effectiveCards?.length > 0 ? (
+          effectiveCards.map((card) => (
             <Card
               key={card.id}
               onClick={() => {
                 setSelectedCard(card);
                 handleOpenDialog(card);
-                className = "break-words bg-red-400 ";
               }}
-              className="mb-2  cursor-pointer hover:border-blue-900 inset-shadow-xs border  border-gray-200"
+              className="mb-2 cursor-pointer hover:border-blue-900 inset-shadow-xs border border-gray-200"
             >
-              <CardContent className=" flex justify-between items-center ">
+              <CardContent className="flex justify-between items-center">
                 {cardEditMode && editingCardId === card.id ? (
                   <>
                     <Box className="flex w-full gap-2">
@@ -100,7 +114,7 @@ function CardBox({
                         onClick={(e) => {
                           e.stopPropagation();
                           setCardEditMode(false);
-                          handleUpdateCard(card.id, list.id);
+                          if (handleUpdateCard) handleUpdateCard(card.id, list.id);
                         }}
                       >
                         OK
@@ -120,7 +134,7 @@ function CardBox({
                         className="hover:shadow-lg hover:shadow-black/80 transition duration-300 rounded-full "
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteCard(card.id, list.id);
+                          if (handleDeleteCard) handleDeleteCard(card.id, list.id);
                         }}
                       />
                       <EditOutlinedIcon
@@ -129,10 +143,11 @@ function CardBox({
                           e.stopPropagation();
                           setCardEditMode(true);
                           setEditingCardId(card.id);
-                          handleOldCardsTitle(card.id);
+                          (hookGetOldTitle || handleOldCardsTitle)(card.id);
                         }}
                       />
 
+                      {/* Dialog */}
                       <Dialog
                         sx={{
                           "& .MuiDialog-paper": {
@@ -191,45 +206,47 @@ function CardBox({
                             alignItems: "center",
                           }}
                         >
-                          {selectedCard &&
-                            selectedCard.description &&
-                            selectedCard.description.length > 0 && (
-                              <>
-                                <Button
-                                  onClick={async () => {
-                                    await getOldTitle(selectedCard?.id);
-                                    setDescEditMode(true);
-                                  }}
-                                >
-                                  Edit
-                                </Button>
-                                <Button
-                                  onClick={async () => {
+                          {selectedCard?.description &&
+                          selectedCard.description.length > 0 ? (
+                            <>
+                              <Button
+                                onClick={async () => {
+                                  await getOldTitle(selectedCard?.id);
+                                  setDescEditMode(true);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                onClick={async () => {
+                                  if (handleUpdateDesc) {
                                     await handleUpdateDesc(
                                       selectedCard.id,
                                       list.id,
                                       editCardDesc
                                     );
-                                    setDescEditMode(false);
-                                  }}
-                                >
-                                  Update
-                                </Button>
-                              </>
-                            )}
-                          {selectedCard &&
-                          selectedCard.description &&
-                          selectedCard.description.length > 0 ? (
-                            <></>
+                                  } else {
+                                    updateDescription(selectedCard.id, editCardDesc);
+                                  }
+                                  setDescEditMode(false);
+                                }}
+                              >
+                                Update
+                              </Button>
+                            </>
                           ) : (
                             <>
                               <Button
                                 onClick={() => {
-                                  handleUpdateDesc(
-                                    selectedCard.id,
-                                    selectedCard.listId,
-                                    editCardDesc
-                                  );
+                                  if (handleUpdateDesc) {
+                                    handleUpdateDesc(
+                                      selectedCard.id,
+                                      selectedCard.listId,
+                                      editCardDesc
+                                    );
+                                  } else {
+                                    updateDescription(selectedCard.id, editCardDesc);
+                                  }
                                 }}
                               >
                                 Add
@@ -250,13 +267,15 @@ function CardBox({
           </Typography>
         )}
       </Box>
+
+      {/* Add Card Input */}
       <Box>
-        {showAddCardForList[list.id] ? (
+        {showAddCardForList?.[list.id] ? (
           <>
             <TextField
               sx={{ width: "100%" }}
               placeholder="Card Name"
-              value={newCardTitles[list.id] || ""}
+              value={newCardTitles?.[list.id] || ""}
               onChange={(e) =>
                 setNewCardTitles((prev) => ({
                   ...prev,
@@ -311,4 +330,5 @@ function CardBox({
     </section>
   );
 }
+
 export default CardBox;

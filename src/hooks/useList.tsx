@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createNewList,
   getAllLists,
@@ -6,103 +7,74 @@ import {
   deleteList,
   getOldListTitle,
 } from "../apicalls/list";
+import { toast } from "sonner";
 
-export const useList = (boardId) => {
-  const [lists, setLists] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [editingListTitle, setEditingListTitle] = useState("");
-
-  const fetchLists = async () => {
-    try {
-      setLoading(true);
-      const response = await getAllLists(boardId);
-      if (response.isSuccess) {
-        setLists(response.lists);
-      } else {
-        setError(response.message);
-      }
-    } catch (err) {
-      setError(err.message || "Failed to fetch lists.");
-    } finally {
-      setLoading(false);
-    }
-  };
+export const useList = (boardId?: string) => {
+  const queryClient = useQueryClient();
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["lists", boardId ?? ""],
+    queryFn: () => getAllLists(boardId || ""),
+    enabled: !!boardId,
+  });
 
   useEffect(() => {
-    if (boardId) {
-      fetchLists();
+    if (error) {
+      toast.error((error as any)?.message ?? "Failed to fetch lists");
     }
-  }, [boardId]);
+  }, [error]);
 
-  const addList = async (title) => {
-    setLoading(true);
-    try {
-      const response = await createNewList({ boardId, title });
-      if (response.isSuccess) {
-        await fetchLists();
-      } else {
-        setError(response.message);
-      }
-    } catch (err) {
-      setError(err.message || "Failed to create list.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const createMutation = useMutation({
+    mutationFn: (payload: { boardId: string; title: string }) =>
+      createNewList(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lists", boardId ?? ""] });
+      toast.success("List created");
+    },
+    onError: (err: any) => toast.error(err?.message ?? "Failed to create list"),
+  });
 
-  const editList = async (listId, newTitle) => {
-    try {
-      const response = await updateList({ listId, title: newTitle });
-      if (response.isSuccess) {
-        await fetchLists();
-      } else {
-        setError(response.message);
-      }
-    } catch (err) {
-      setError(err.message || "Failed to update list.");
-    }
-  };
+  const updateMutation = useMutation({
+    mutationFn: (payload: { listId: string; title: string }) =>
+      updateList(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lists", boardId ?? ""] });
+      toast.success("List updated");
+    },
+    onError: (err: any) => toast.error(err?.message ?? "Failed to update list"),
+  });
 
-  const removeList = async (listId) => {
-    try {
-      const response = await deleteList(listId);
-      if (response.isSuccess) {
-        setLists((prev) => prev.filter((list) => list.id !== listId));
-      } else {
-        setError(response.message);
-      }
-    } catch (err) {
-      setError(err.message || "Failed to delete list.");
-    }
-  };
+  const deleteMutation = useMutation({
+    mutationFn: (listId: string) => deleteList(listId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lists", boardId ?? ""] });
+      toast.success("List deleted");
+    },
+    onError: (err: any) => toast.error(err?.message ?? "Failed to delete list"),
+  });
 
-  const getListTitle = async (listId) => {
+  const getListTitle = async (listId: string) => {
     try {
-      const response = await getOldListTitle(listId);
-      if (response.isSuccess) {
-        setEditingListTitle(response.title);
-        return response.title;
-      } else {
-        setError(response.message);
-        return "";
-      }
-    } catch (err) {
-      setError(err.message || "Failed to fetch list title.");
+      const res = await getOldListTitle(listId);
+      if (res.isSuccess) return res.title ?? "";
+      toast.error(res.message ?? "Failed to fetch list title");
+      return "";
+    } catch (err: any) {
+      toast.error(err?.message ?? "Failed to fetch list title");
       return "";
     }
   };
 
   return {
-    lists,
-    loading,
+    lists: data?.lists,
+    loading: isLoading,
     error,
-    addList,
-    editList,
-    removeList,
+    addList: (title: string) =>
+      createMutation.mutate({ boardId: boardId || "", title }),
+    editList: (listId: string, title: string) =>
+      updateMutation.mutate({ listId, title }),
+    removeList: (listId: string) => deleteMutation.mutate(listId),
     getListTitle,
-    editingListTitle,
-    setEditingListTitle,
-    refetchLists: fetchLists,
+    refetchLists: () =>
+      queryClient.invalidateQueries({ queryKey: ["lists", boardId ?? ""] }),
   };
 };
