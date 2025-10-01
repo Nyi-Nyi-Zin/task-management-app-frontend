@@ -1,75 +1,52 @@
-import { axiosInstance } from "./axiosInstance";
+import { axiosInstance, handleRequest } from "./axiosInstance";
 
-export const createNewList = async (payload) => {
-  try {
-    const response = await axiosInstance.post("/board/create-list", payload);
-    return response.data;
-  } catch (error) {
-    throw error.response.data;
-  }
+export interface CreateListPayload {
+  boardId: string;
+  title: string;
+}
+
+export interface ListResponse {
+  isSuccess: boolean;
+  message?: string;
+  lists?: any[];
+  title?: string;
+}
+
+export const createNewList = async (
+  payload: CreateListPayload
+): Promise<ListResponse> => {
+  return handleRequest(
+    axiosInstance.post<ListResponse>("/board/create-list", payload)
+  );
 };
 
-//get all lists
-//hook used
-export const getAllLists = async (boardId) => {
-  try {
-    const response = await axiosInstance.get(`/get-lists/${boardId}`, {
-      validateStatus: () => true,
-    });
-    return response.data;
-  } catch (error) {
-    throw error.response.data;
-  }
+export const getAllLists = async (boardId: string): Promise<ListResponse> => {
+  return handleRequest(
+    axiosInstance.get<ListResponse>(`/get-lists/${boardId}`)
+  );
 };
 
-//update list
-//hook used
-export const updateList = async (payload) => {
-  console.log("Updating list with payload:", payload);
-  try {
-    const response = await axiosInstance.put(
-      `/board/update-list/${payload.listId}`,
-      { title: payload.title },
-      {
-        validateStatus: () => true,
-      }
-    );
-    console.log("Update response:", response.data);
-    return response.data;
-  } catch (error) {
-    console.error("Error in updateList API call:", error);
-    throw error.response?.data || error;
-  }
+export const updateList = async (payload: {
+  listId: string;
+  title: string;
+}): Promise<ListResponse> => {
+  return handleRequest(
+    axiosInstance.put<ListResponse>(`/board/update-list/${payload.listId}`, {
+      title: payload.title,
+    })
+  );
 };
 
-//fetch old list title
-//hook used
-export const getOldListTitle = async (listId) => {
-  try {
-    const response = await axiosInstance.get(
-      `/board/get-old-list-title/${listId}`,
-      {
-        validateStatus: () => true,
-      }
-    );
-    return response.data;
-  } catch (error) {
-    throw error.response.data;
-  }
+export const getOldListTitle = async (
+  listId: string
+): Promise<ListResponse> => {
+  return handleRequest(
+    axiosInstance.get<ListResponse>(`/board/get-old-list-title/${listId}`)
+  );
 };
 
-//delete list
-//hook used
-export const deleteList = async (listId) => {
-  try {
-    const response = await axiosInstance.delete(
-      `/board/delete-list/${listId}`,
-      {
-        validateStatus: () => true,
-      }
-    );
-    return response.data;
-  } catch (error) {
-    throw error.response.data;
-  }
+export const deleteList = async (listId: string): Promise<ListResponse> => {
+  return handleRequest(
+    axiosInstance.delete<ListResponse>(`/board/delete-list/${listId}`)
+  );
 };

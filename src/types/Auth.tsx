@@ -23,7 +23,7 @@ export interface RegisterResponse {
 }
 
 export interface ApiResponse<T> {
-  success: boolean;
-  data: T | null;
+  isSuccess: boolean;
+  data?: T;
   message?: string;
 }

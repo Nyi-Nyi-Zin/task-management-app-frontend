@@ -1,151 +1,182 @@
-import { Box, Button, Card, TextField } from "@mui/material";
-// import bgImg from '../../assets/bg_image.webp'
-import { useNavigate } from "react-router-dom";
-
+import {
+  Box,
+  Button,
+  Card,
+  IconButton,
+  TextField,
+  Popover,
+  MenuItem,
+} from "@mui/material";
+import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
+import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 import ListCard from "./ListCard";
+import {
+  useGetSingleBoard,
+  useUpdateBoard,
+  useDeleteBoard,
+} from "../../hooks/useBoard";
+import { toast } from "sonner";
+import { BoardSchema, ListSchema } from "../../schema/board";
+import type { Board, List } from "../../schema/board";
 
-function List({
-  boardDetails,
-  allLists,
-  showAddList,
-  editMode,
-  handleListEdit,
-  handleDeleteList,
-  cardsByList,
-  showAddCardForList,
-  cardEditMode,
-  selectedCard,
-  descEditMode,
-  editCardDesc,
-  setShowAddList,
-  newListTitle,
-  handleCreateList,
-  loading,
-  setNewListTitle,
-  editingListId,
-  setEditMode,
-  setShowAddCardForList,
-  newCardTitles,
-  setNewCardTitles,
-  handleCreateCard,
-  handleDeleteCard,
-  setCardEditMode,
-  editingCardId,
-  setEditingCardId,
-  editingCardTitle,
-  setEditingCardTitle,
-  handleUpdateCard,
-  handleOldCardsTitle,
-  setSelectedCard,
-  setEditCardDesc,
-  setDescEditMode,
-  handleUpdateDesc,
-  getOldTitle,
-}) {
+type ListProps = {
+  boardDetails?: Board;
+  allLists?: List[];
+};
+
+function Lists({ boardDetails: initialBoardDetails, allLists }: ListProps) {
   const navigate = useNavigate();
+  const { boardId } = useParams<{ boardId: string }>();
+
+  const { data: boardResponse, isLoading } = useGetSingleBoard(boardId);
+
+  // Debug logs
+  console.log("boardId:", boardId);
+  console.log("boardResponse:", boardResponse);
+
+  // ✅ Fix: parse the actual "board" field, not the whole response
+  const parsedBoard = boardResponse?.board
+    ? BoardSchema.safeParse(boardResponse.board)
+    : null;
+
+  console.log("parsedBoard:", parsedBoard);
+
+  const boardDetails = parsedBoard?.success
+    ? parsedBoard.data
+    : initialBoardDetails;
+
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [title, setTitle] = useState("");
+
+  const { mutate: updateBoard } = useUpdateBoard();
+  const { mutate: deleteBoard } = useDeleteBoard();
+
+  useEffect(() => {
+    if (boardDetails?.title) setTitle(boardDetails.title);
+  }, [boardDetails?.title]);
+
+  const handleOpen = (event: React.MouseEvent<HTMLElement>) =>
+    setAnchorEl(event.currentTarget);
+  const handleClose = () => setAnchorEl(null);
+  const open = Boolean(anchorEl);
+
+  const handleUpdate = () => {
+    if (!boardDetails) return;
+
+    updateBoard(
+      { id: boardDetails.id.toString(), title },
+      {
+        onSuccess: () => {
+          setIsEditing(false);
+          toast.success("Board updated successfully");
+        },
+        onError: (error) => {
+          console.error("Failed to update board:", error);
+          toast.error("Failed to update board");
+        },
+      }
+    );
+  };
+
+  const handleDelete = () => {
+    if (!boardId) return;
+    deleteBoard(boardId, {
+      onSuccess: () => navigate("/"),
+    });
+  };
+
+  if (isLoading) {
+    return <div className="p-6 text-center">Loading board...</div>;
+  }
+
+  if (!boardDetails) {
+    return (
+      <div className="p-6 text-center text-red-500">
+        Failed to load board data. Check console for details.
+      </div>
+    );
+  }
+
   return (
-    <Card className=" w-full min-h-screen bg-amber-900 ">
-      {/* <div className="absolute inset-0 -z-50">
-        <img
-          src={bgImg}
-          alt="Developer workspace"
-          className="w-full  object-cover h-full "
-        />
-       
-      </div> */}
-      <section className=" w-full h-screen bg-[#0079BF]">
-        <div className="text-white font-bold text-center mx-auto py-3 w-full  break-words bg-[#005C91] flex">
-          {/* <button
-          onClick={() => navigate(-1)}
-          className=" bg-blue-500 text-white  hover:bg-blue-600   rounded-md cursor-pointer"
-        >
-          Go Back
-        </button> */}
-          <h1 className="text-[20px] text-center mx-5">{boardDetails.title}</h1>
+    <Card className="w-full min-h-screen bg-amber-900">
+      <section className="w-full h-screen bg-[#0079BF]">
+        {/* Header */}
+        <div className="text-white font-bold text-center py-3 w-full break-words bg-[#005C91] flex items-center justify-between px-10">
+          {isEditing ? (
+            <div className="flex gap-2 items-center">
+              <TextField
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                size="small"
+              />
+              <Button onClick={handleUpdate} variant="contained">
+                Update
+              </Button>
+              <Button
+                onClick={() => {
+                  setIsEditing(false);
+                  setTitle(boardDetails.title);
+                }}
+                variant="outlined"
+                color="inherit"
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <h1 className="text-[20px] text-center mx-5">
+              {boardDetails.title}
+            </h1>
+          )}
+
+          <IconButton aria-label="settings-app" onClick={handleOpen}>
+            <SettingsApplicationsIcon sx={{ color: "white", fontSize: 30 }} />
+          </IconButton>
         </div>
 
-        <Box
-          sx={{
-            display: "flex",
-            padding: 2,
-            gap: 3,
-          }}
+        {/* Popover */}
+        <Popover
+          open={open}
+          anchorEl={anchorEl}
+          onClose={handleClose}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
         >
-          {allLists &&
-            allLists.map((list) => (
-              <ListCard
-                list={list}
-                key={list.id}
-                editMode={editMode}
-                handleListEdit={handleListEdit}
-                handleDeleteList={handleDeleteList}
-                cardsByList={cardsByList}
-                showAddCardForList={showAddCardForList}
-                cardEditMode={cardEditMode}
-                descEditMode={descEditMode}
-                editCardDesc={editCardDesc}
-                setSelectedCard={setSelectedCard}
-                selectedCard={selectedCard}
-                setShowAddCardForList={setShowAddCardForList}
-                newCardTitles={newCardTitles}
-                setNewCardTitles={setNewCardTitles}
-                handleCreateCard={handleCreateCard}
-                handleDeleteCard={handleDeleteCard}
-                setCardEditMode={setCardEditMode}
-                editingCardId={editingCardId}
-                setEditingCardId={setEditingCardId}
-                editingCardTitle={editingCardTitle}
-                setEditingCardTitle={setEditingCardTitle}
-                handleUpdateCard={handleUpdateCard}
-                handleOldCardsTitle={handleOldCardsTitle}
-                setEditCardDesc={setEditCardDesc}
-                setDescEditMode={setDescEditMode}
-                handleUpdateDesc={handleUpdateDesc}
-                getOldTitle={getOldTitle}
-                editingListId={editingListId}
-                newListTitle={newListTitle}
-                setNewListTitle={setNewListTitle}
-                setEditMode={setEditMode}
-              />
-            ))}
-          <div className="flex gap-3 pr-15 ">
-            {showAddList ? (
-              <>
-                <TextField
-                  className="w-75 h-14"
-                  label="New List Name"
-                  value={newListTitle}
-                  onChange={(e) => setNewListTitle(e.target.value)}
-                />
-                <Button
-                  onClick={handleCreateList}
-                  disabled={loading}
-                  variant="contained"
-                  className="h-14"
-                >
-                  ADD
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="outlined"
-                  sx={{
-                    backgroundColor: "rgba(255,255,255,0.5)",
-                    color: "black",
-                  }} // 0.5 = 50% transparent
-                  className="h-10 w-50"
-                  style={{ marginLeft: "20px" }}
-                  onClick={() => setShowAddList(true)}
-                >
-                  Add New List
-                </Button>
-              </>
-            )}
-          </div>
+          <MenuItem
+            onClick={() => {
+              setIsEditing(true);
+              handleClose();
+            }}
+          >
+            Edit
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              handleDelete();
+              handleClose();
+            }}
+            sx={{ color: "red" }}
+          >
+            Delete
+          </MenuItem>
+        </Popover>
+
+        {/* Lists */}
+        <Box sx={{ display: "flex", padding: 2, gap: 3 }}>
+          {allLists?.map((list) => {
+            const parsedList = ListSchema.safeParse(list);
+            if (!parsedList.success) {
+              console.warn("Invalid list schema:", list);
+              return null;
+            }
+            return <ListCard key={parsedList.data.id} list={parsedList.data} />;
+          })}
         </Box>
       </section>
     </Card>
   );
 }
-export default List;
+
+export default Lists;

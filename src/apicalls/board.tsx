@@ -3,51 +3,36 @@ import {
   BoardType,
   CreateBoardRequest,
   UpdateBoardRequest,
-  ApiResponse,
 } from "../types/board";
 
 export const createBoard = async (
   payload: CreateBoardRequest
-): Promise<BoardType> => {
-  const res = await axiosInstance.post<BoardType>("/create-board", payload);
-  return res.data;
+): Promise<{ isSuccess: boolean; data?: BoardType; message?: string }> => {
+  return handleRequest(axiosInstance.post(`/create-board`, payload));
 };
 
-// export const fetchBoards = async (
-//   userId: number
-// ): Promise<ApiResponse<BoardType[]>> => {
-//   return handleRequest(
-//     axiosInstance.get<ApiResponse<BoardType[]>>(`/get-boards`)
-//   );
-// };
-
-export const fetchBoards = async (): Promise<ApiResponse<BoardType[]>> => {
-  return handleRequest(
-    axiosInstance.get<ApiResponse<BoardType[]>>("/get-boards")
-  );
+export const fetchBoards = async (): Promise<{
+  isSuccess: boolean;
+  data?: BoardType[];
+  message?: string;
+}> => {
+  return handleRequest(axiosInstance.get(`/get-boards`));
 };
 
 export const updateBoard = async (
   payload: UpdateBoardRequest
-): Promise<ApiResponse<BoardType>> => {
+): Promise<{ isSuccess: boolean; data?: BoardType; message?: string }> => {
   return handleRequest(
-    axiosInstance.put<ApiResponse<BoardType>>(
-      `/update-board/${payload.id}`,
-      payload
-    )
+    axiosInstance.put(`/update-board/${payload.id}`, payload)
   );
 };
 
-export const deleteBoard = async (id: string): Promise<ApiResponse<null>> => {
-  return handleRequest(
-    axiosInstance.delete<ApiResponse<null>>(`/delete-board/${id}`)
-  );
-};
-
-export const getSingleBoard = async (
+export const deleteBoard = async (
   id: string
-): Promise<ApiResponse<BoardType>> => {
-  return handleRequest(
-    axiosInstance.get<ApiResponse<BoardType>>(`/get-board/${id}`)
-  );
+): Promise<{ isSuccess: boolean; message?: string }> => {
+  return handleRequest(axiosInstance.delete(`/delete-board/${id}`));
+};
+
+export const getSingleBoard = async (id: string) => {
+  return handleRequest(axiosInstance.get(`/get-board/${id}`));
 };

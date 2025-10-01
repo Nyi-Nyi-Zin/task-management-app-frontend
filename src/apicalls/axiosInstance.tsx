@@ -1,28 +1,33 @@
-import axios, { AxiosError, AxiosResponse } from "axios";
-
-// const getFreshLocalStorage = () => {
-//   const refreshToken = localStorage.getItem("token");
-//   return refreshToken;
-// };
+import axios, { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
 const getToken = () => localStorage.getItem("token");
 
 export const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_SERVER_URL || "",
+  baseURL: (import.meta.env.VITE_SERVER_URL as string) || "",
   timeout: 10000,
 });
 
 axiosInstance.interceptors.request.use(
-  (config) => {
+  (config: InternalAxiosRequestConfig) => {
     const token = getToken();
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      if (!config.headers) {
+        config.headers = {} as any;
+      }
+      // Prefer set() when available on AxiosHeaders, otherwise assign
+      const maybeHeaders: any = config.headers as any;
+      if (typeof maybeHeaders.set === "function") {
+        maybeHeaders.set("Authorization", `Bearer ${token}`);
+      } else {
+        (config.headers as any) = {
+          ...(config.headers as any),
+          Authorization: `Bearer ${token}`,
+        } as any;
+      }
     }
     return config;
   },
-  (err) => {
-    return Promise.reject(err);
-  }
+  (err) => Promise.reject(err)
 );
 
 axiosInstance.interceptors.response.use(
@@ -37,22 +42,29 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-export const handleRequest = async <T,>(
+export type ApiError = { isSuccess?: boolean; message?: string } | any;
+
+export async function handleRequest<T>(
   request: Promise<AxiosResponse<T>>
-): Promise<T> => {
+): Promise<T> {
   try {
     const response = await request;
     return response.data;
-  } catch (error) {
-    if (error instanceof AxiosError) {
-      if (error.response && error.response.data) {
-        return Promise.reject(error.response.data);
-      }
-      return Promise.reject({ isSuccess: false, message: error.message });
+  } catch (err) {
+    const error = err as AxiosError;
+    if (error?.response?.data) {
+      return Promise.reject(error.response.data as ApiError);
     }
     return Promise.reject({
       isSuccess: false,
-      message: "Unknown error occurred",
+      message: error?.message ?? "Unknown error occurred",
     });
   }
-};
+}
+
+export function validate<T>(
+  data: unknown,
+  parser: { parse: (d: unknown) => T }
+): T {
+  return parser.parse(data);
+}

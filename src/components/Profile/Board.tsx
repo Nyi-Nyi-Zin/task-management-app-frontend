@@ -9,7 +9,7 @@ import { RootState } from "../../store/store";
 function Board() {
   const { user } = useSelector((state: RootState) => state.reducer.user);
 
-  // ✅ fetchBoards no longer needs userId
+
   const { data, isPending } = useFetchBoards();
   console.log(data);
   const boards = data ?? [];
@@ -30,7 +30,7 @@ function Board() {
   };
 
   return (
-    <section className="min-h-screen flex justify-center items-start">
+    <section className="min-h-screen flex justify-center items-start mb-5">
       {user && (
         <Card className="w-full max-w-[1000px] rounded border-1 border-zinc-300 p-3 ">
           <Title>YOUR WORKSPACES</Title>
@@ -60,12 +60,7 @@ function Board() {
             </div>
           )}
         </Card>
-        //   ) : (
-        //     <section className="flex justify-center items-center h-[87vh]">
-        //       <p className="text-blue-600 text-4xl mb-10 text-center">
-        //         Login or Register to Start Manage Your Tasks
-        //       </p>
-        //     </section>
+
       )}
     </section>
   );
