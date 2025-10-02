@@ -6,25 +6,24 @@ import {
   updateBoard,
   deleteBoard,
 } from "../../apicalls/board";
-import Board from "../../components/Profile/Board";
+import Board from "./Board";
 import { RootState } from "../../store/store";
 
-
- export const handleNewBoard = async () => {
-    try {
-      const response = await createBoard({
-        title: boardName,
-        userId: user.id,
-      });
-      if (response.isSuccess) {
-        setBoardName("");
-        setShowForm(false);
-        fetchAllBoards();
-      }
-    } catch (error) {
-      console.error("Error creating board:", error);
+export const handleNewBoard = async () => {
+  try {
+    const response = await createBoard({
+      title: boardName,
+      userId: user.id,
+    });
+    if (response.isSuccess) {
+      setBoardName("");
+      setShowForm(false);
+      fetchAllBoards();
     }
-  };
+  } catch (error) {
+    console.error("Error creating board:", error);
+  }
+};
 
 function Index() {
   const useTypedSelector: TypedUseSelectorHook<RootState> = useSelector;
@@ -35,7 +34,6 @@ function Index() {
   const [boardName, setBoardName] = useState("");
   const [editingBoardId, setEditingBoardId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
-
 
   const textFieldRef = useRef(null);
 
@@ -66,8 +64,6 @@ function Index() {
       textFieldRef.current.focus();
     }
   }, [showForm]);
-
-
 
   const handleUpdateBoard = async (id, title) => {
     try {

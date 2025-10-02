@@ -8,7 +8,8 @@ import {
 export const createBoard = async (
   payload: CreateBoardRequest
 ): Promise<{ isSuccess: boolean; data?: BoardType; message?: string }> => {
-  return handleRequest(axiosInstance.post(`/create-board`, payload));
+  const response = await axiosInstance.post("/create-board", payload);
+  return response.data;
 };
 
 export const fetchBoards = async (): Promise<{
@@ -22,9 +23,8 @@ export const fetchBoards = async (): Promise<{
 export const updateBoard = async (
   payload: UpdateBoardRequest
 ): Promise<{ isSuccess: boolean; data?: BoardType; message?: string }> => {
-  return handleRequest(
-    axiosInstance.put(`/update-board/${payload.id}`, payload)
-  );
+  const res = await axiosInstance.put(`/update-board/${payload.id}`, payload);
+  return res.data;
 };
 
 export const deleteBoard = async (
