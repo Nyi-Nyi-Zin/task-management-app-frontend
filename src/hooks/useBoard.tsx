@@ -14,7 +14,7 @@ import {
 } from "../types/board";
 import { toast } from "sonner";
 
-// Fetch all boards
+// ------------------ Fetch all boards ------------------
 export const useFetchBoards = () => {
   return useQuery<BoardType[]>({
     queryKey: ["boards"],
@@ -26,7 +26,7 @@ export const useFetchBoards = () => {
   });
 };
 
-// Fetch single board by ID
+// ------------------ Fetch single board ------------------
 export const useGetSingleBoard = (id: string | undefined) => {
   return useQuery<ApiResponse<BoardType>>({
     queryKey: ["board", id],
@@ -35,7 +35,7 @@ export const useGetSingleBoard = (id: string | undefined) => {
   });
 };
 
-// Create board
+// ------------------ Create board ------------------
 export const useCreateBoard = () => {
   const queryClient = useQueryClient();
   return useMutation<
@@ -48,13 +48,10 @@ export const useCreateBoard = () => {
       queryClient.invalidateQueries({ queryKey: ["boards"] });
       toast.success("Board created successfully");
     },
-    onError: () => {
-      toast.error("Failed to create board");
-    },
   });
 };
 
-// Update board
+// ------------------ Update board ------------------
 export const useUpdateBoard = () => {
   const queryClient = useQueryClient();
   return useMutation<
@@ -63,31 +60,51 @@ export const useUpdateBoard = () => {
     UpdateBoardRequest
   >({
     mutationFn: updateBoard,
-    onSuccess: (updatedBoard) => {
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
-      const boardId = updatedBoard.data?.id as string | number | undefined;
-      if (boardId)
-        queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+    onSuccess: (res) => {
+      const boardId = res.data?.id;
       toast.success("Board updated successfully");
-    },
-    onError: () => {
-      toast.error("Failed to update board");
+
+      if (boardId) {
+        queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   });
 };
 
-// Delete board
+// ------------------ Delete board ------------------
 export const useDeleteBoard = () => {
   const queryClient = useQueryClient();
   return useMutation<{ isSuccess: boolean; message?: string }, Error, string>({
     mutationFn: deleteBoard,
-    onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
+
+    onMutate: async (id) => {
+      const previousBoards = queryClient.getQueryData<BoardType[]>(["boards"]);
+      const previousBoard = queryClient.getQueryData(["board", id]);
+
+      // Optimistically remove board
+      queryClient.setQueryData<BoardType[]>(["boards"], (old) =>
+        old?.filter((board) => board.id !== id)
+      );
+
       queryClient.removeQueries({ queryKey: ["board", id] });
-      toast.success("Board deleted successfully");
+
+      return { previousBoards, previousBoard };
     },
-    onError: () => {
+
+    onError: (_err, id, context) => {
+      if (context?.previousBoards) {
+        queryClient.setQueryData(["boards"], context.previousBoards);
+      }
+      if (context?.previousBoard) {
+        queryClient.setQueryData(["board", id], context.previousBoard);
+      }
       toast.error("Failed to delete board");
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["boards"] });
+      toast.success("Board deleted successfully");
     },
   });
 };

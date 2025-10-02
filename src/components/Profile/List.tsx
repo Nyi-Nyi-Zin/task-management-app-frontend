@@ -83,7 +83,7 @@ function Lists({ boardDetails: initialBoardDetails, allLists }: ListProps) {
   const handleDelete = () => {
     if (!boardId) return;
     deleteBoard(boardId, {
-      onSuccess: () => navigate("/"),
+      onSuccess: () => navigate("/profile"),
     });
   };
 

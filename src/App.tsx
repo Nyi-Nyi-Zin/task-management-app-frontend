@@ -11,7 +11,7 @@ import AuthProvider from "./providers/AuthProvider";
 import Profile from "./pages/profile/Index";
 import Board from "./pages/profile/Board";
 import ErrorPage from "./pages/ErrorPage";
-
+import BoardDetail from "./pages/profile/BoardDetail";
 
 function App() {
   const router = createBrowserRouter([
@@ -43,7 +43,7 @@ function App() {
           path: "/board/:boardId",
           element: (
             <AuthProvider>
-              <Board />
+              <BoardDetail />
             </AuthProvider>
           ),
         },
