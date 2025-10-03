@@ -1,5 +1,6 @@
 import { axiosInstance, handleRequest } from "./axiosInstance";
 import {
+  ApiResponse,
   BoardType,
   CreateBoardRequest,
   UpdateBoardRequest,
@@ -33,6 +34,9 @@ export const deleteBoard = async (
   return handleRequest(axiosInstance.delete(`/delete-board/${id}`));
 };
 
-export const getSingleBoard = async (id: string) => {
-  return handleRequest(axiosInstance.get(`/get-board/${id}`));
+export const getSingleBoard = async (
+  id: string
+): Promise<ApiResponse<BoardType>> => {
+  const response = await axiosInstance.get(`/get-board/${id}`);
+  return response.data;
 };
