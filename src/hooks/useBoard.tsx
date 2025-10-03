@@ -14,7 +14,6 @@ import {
 } from "../types/board";
 import { toast } from "sonner";
 
-// ------------------ Fetch all boards ------------------
 export const useFetchBoards = () => {
   return useQuery<BoardType[]>({
     queryKey: ["boards"],
@@ -26,7 +25,6 @@ export const useFetchBoards = () => {
   });
 };
 
-// ------------------ Fetch single board ------------------
 export const useGetSingleBoard = (id: string | undefined) => {
   return useQuery<ApiResponse<BoardType>>({
     queryKey: ["board", id],
@@ -35,7 +33,6 @@ export const useGetSingleBoard = (id: string | undefined) => {
   });
 };
 
-// ------------------ Create board ------------------
 export const useCreateBoard = () => {
   const queryClient = useQueryClient();
   return useMutation<
@@ -51,7 +48,6 @@ export const useCreateBoard = () => {
   });
 };
 
-// ------------------ Update board ------------------
 export const useUpdateBoard = () => {
   const queryClient = useQueryClient();
   return useMutation<
@@ -60,19 +56,16 @@ export const useUpdateBoard = () => {
     UpdateBoardRequest
   >({
     mutationFn: updateBoard,
-    onSuccess: (res) => {
-      const boardId = res.data?.id;
-      toast.success("Board updated successfully");
-
-      if (boardId) {
-        queryClient.invalidateQueries({ queryKey: ["board", boardId] });
+    onSuccess: (_, variables) => {
+      // variables.id is the board id we updated
+      if (variables.id) {
+        queryClient.invalidateQueries({ queryKey: ["board", variables.id] });
       }
       queryClient.invalidateQueries({ queryKey: ["boards"] });
     },
   });
 };
 
-// ------------------ Delete board ------------------
 export const useDeleteBoard = () => {
   const queryClient = useQueryClient();
   return useMutation<{ isSuccess: boolean; message?: string }, Error, string>({
@@ -82,7 +75,6 @@ export const useDeleteBoard = () => {
       const previousBoards = queryClient.getQueryData<BoardType[]>(["boards"]);
       const previousBoard = queryClient.getQueryData(["board", id]);
 
-      // Optimistically remove board
       queryClient.setQueryData<BoardType[]>(["boards"], (old) =>
         old?.filter((board) => board.id !== id)
       );

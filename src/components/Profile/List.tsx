@@ -1,69 +1,52 @@
+// List.tsx
+import React, { useEffect, useState } from "react";
 import {
-  Box,
-  Button,
   Card,
-  IconButton,
+  Box,
   TextField,
+  Button,
+  IconButton,
   Popover,
   MenuItem,
 } from "@mui/material";
 import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 import { useNavigate, useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
 import ListCard from "./ListCard";
-import {
-  useGetSingleBoard,
-  useUpdateBoard,
-  useDeleteBoard,
-} from "../../hooks/useBoard";
+import { useUpdateBoard, useDeleteBoard } from "../../hooks/useBoard";
 import { toast } from "sonner";
-import { BoardSchema, ListSchema } from "../../schema/board";
+import { ListSchema } from "../../schema/board";
 import type { Board, List } from "../../schema/board";
+import { useQueryClient } from "@tanstack/react-query";
 
 type ListProps = {
-  boardDetails?: Board;
-  allLists?: List[];
+  boardDetails?: Board; // optional now
+  allLists?: List[]; // optional now
 };
 
-function Lists({ boardDetails: initialBoardDetails, allLists }: ListProps) {
+function Lists({ boardDetails = {}, allLists = [] }: ListProps) {
+  console.log(boardDetails);
+
   const navigate = useNavigate();
   const { boardId } = useParams<{ boardId: string }>();
-
-  const { data: boardResponse, isLoading } = useGetSingleBoard(boardId);
-
-  // Debug logs
-  console.log("boardId:", boardId);
-  console.log("boardResponse:", boardResponse);
-
-  // ✅ Fix: parse the actual "board" field, not the whole response
-  const parsedBoard = boardResponse?.board
-    ? BoardSchema.safeParse(boardResponse.board)
-    : null;
-
-  console.log("parsedBoard:", parsedBoard);
-
-  const boardDetails = parsedBoard?.success
-    ? parsedBoard.data
-    : initialBoardDetails;
-
+  const queryClient = useQueryClient();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(boardDetails?.title ?? "");
 
   const { mutate: updateBoard } = useUpdateBoard();
   const { mutate: deleteBoard } = useDeleteBoard();
 
+  // Sync title if boardDetails changes
   useEffect(() => {
-    if (boardDetails?.title) setTitle(boardDetails.title);
+    setTitle(boardDetails?.title ?? "");
   }, [boardDetails?.title]);
 
   const handleOpen = (event: React.MouseEvent<HTMLElement>) =>
     setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
-  const open = Boolean(anchorEl);
 
   const handleUpdate = () => {
-    if (!boardDetails) return;
+    if (!boardDetails?.id) return;
 
     updateBoard(
       { id: boardDetails.id.toString(), title },
@@ -71,33 +54,22 @@ function Lists({ boardDetails: initialBoardDetails, allLists }: ListProps) {
         onSuccess: () => {
           setIsEditing(false);
           toast.success("Board updated successfully");
+          console.log(boardDetails.id);
+
+          // ✅ Now queryClient is defined
+          // queryClient.invalidateQueries({
+          //   queryKey: ["board", boardDetails.id],
+          // });
+          // queryClient.invalidateQueries({ queryKey: ["boards"] });
         },
-        onError: (error) => {
-          console.error("Failed to update board:", error);
-          toast.error("Failed to update board");
-        },
+        onError: () => toast.error("Failed to update board"),
       }
     );
   };
-
   const handleDelete = () => {
     if (!boardId) return;
-    deleteBoard(boardId, {
-      onSuccess: () => navigate("/profile"),
-    });
+    deleteBoard(boardId, { onSuccess: () => navigate("/profile") });
   };
-
-  if (isLoading) {
-    return <div className="p-6 text-center">Loading board...</div>;
-  }
-
-  if (!boardDetails) {
-    return (
-      <div className="p-6 text-center text-red-500">
-        Failed to load board data. Check console for details.
-      </div>
-    );
-  }
 
   return (
     <Card className="w-full min-h-screen bg-amber-900">
@@ -117,7 +89,7 @@ function Lists({ boardDetails: initialBoardDetails, allLists }: ListProps) {
               <Button
                 onClick={() => {
                   setIsEditing(false);
-                  setTitle(boardDetails.title);
+                  setTitle(boardDetails?.title ?? "");
                 }}
                 variant="outlined"
                 color="inherit"
@@ -127,7 +99,7 @@ function Lists({ boardDetails: initialBoardDetails, allLists }: ListProps) {
             </div>
           ) : (
             <h1 className="text-[20px] text-center mx-5">
-              {boardDetails.title}
+              {boardDetails?.title ?? "Loading..."}
             </h1>
           )}
 
@@ -138,7 +110,7 @@ function Lists({ boardDetails: initialBoardDetails, allLists }: ListProps) {
 
         {/* Popover */}
         <Popover
-          open={open}
+          open={Boolean(anchorEl)}
           anchorEl={anchorEl}
           onClose={handleClose}
           anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
@@ -165,7 +137,7 @@ function Lists({ boardDetails: initialBoardDetails, allLists }: ListProps) {
 
         {/* Lists */}
         <Box sx={{ display: "flex", padding: 2, gap: 3 }}>
-          {allLists?.map((list) => {
+          {allLists.map((list) => {
             const parsedList = ListSchema.safeParse(list);
             if (!parsedList.success) {
               console.warn("Invalid list schema:", list);
