@@ -75,7 +75,7 @@ const Nav = () => {
   };
 
   return (
-    <nav className="border-b-zinc-50 my-2">
+    <nav className="border-b border-b-gray-300">
       <Toolbar sx={{ justifyContent: "space-between", minHeight: 30 }}>
         <Box
           component={Link}
@@ -89,16 +89,6 @@ const Nav = () => {
           }}
         >
           <span>Miracle</span>
-          {/* <img
-            src={logo}
-            alt="logo"
-            style={{
-              height: 40,
-              width: 40,
-              objectFit: "cover",
-              borderRadius: "50%",
-            }}
-          /> */}
         </Box>
 
         <Box

@@ -31,7 +31,7 @@ function Board() {
   return (
     <section className="min-h-screen flex justify-center items-start mb-5">
       {user && (
-        <Card className="w-full max-w-[1000px] rounded border-1 border-zinc-300 p-3 ">
+        <div className="w-full max-w-[1000px] rounded p-3 ">
           <Title>YOUR WORKSPACES</Title>
 
           {isPending ? (
@@ -58,7 +58,7 @@ function Board() {
               ))}
             </div>
           )}
-        </Card>
+        </div>
       )}
     </section>
   );

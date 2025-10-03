@@ -1,161 +1,141 @@
-import CardBox from "./CardBox";
-import CustomizedMenus from "../Menu";
-import { styled } from "@mui/material/styles";
+import React, { useState } from "react";
 import {
-  Typography,
-  Box,
   Paper,
-  InputAdornment,
+  Box,
+  Typography,
   TextField,
   Button,
+  IconButton,
 } from "@mui/material";
-import { blue } from "@mui/material/colors";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import AddIcon from "@mui/icons-material/Add";
 
-const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: "#fff",
-  ...theme.typography.body2,
-  padding: theme.spacing(1),
-  textAlign: "center",
-  color: (theme.vars ?? theme).palette.text.secondary,
-  ...theme.applyStyles("dark", {
-    backgroundColor: "#1A2027",
-  }),
-}));
+export type List = {
+  id: string;
+  title: string;
+  cards: { id: string; title: string }[];
+};
 
-function ListCard({
-  list,
-  editMode,
-  handleListEdit,
-  handleDeleteList,
-  cardsByList,
-  showAddCardForList,
-  cardEditMode,
-  descEditMode,
-  editCardDesc,
-  setSelectedCard,
-  selectedCard,
-  setShowAddCardForList,
-  newCardTitles,
-  setNewCardTitles,
-  handleCreateCard,
-  handleDeleteCard,
-  setCardEditMode,
-  editingCardId,
-  setEditingCardId,
-  editingCardTitle,
-  setEditingCardTitle,
-  handleUpdateCard,
-  handleOldCardsTitle,
-  setEditCardDesc,
-  setDescEditMode,
-  handleUpdateDesc,
-  getOldTitle,
-  editingListId,
-  newListTitle,
-  setNewListTitle,
-  setEditMode,
-}) {
+export type Board = {
+  id: string;
+  title: string;
+};
+
+type ListCardProps = {
+  list: List;
+  board?: Board;
+};
+
+const ListCard: React.FC<ListCardProps> = ({ list, board }) => {
+  const [cards, setCards] = useState(list.cards || []);
+  const [newCardTitle, setNewCardTitle] = useState("");
+  const [addingCard, setAddingCard] = useState(false);
+
+  const handleAddCard = () => {
+    if (!newCardTitle.trim()) return;
+    const newCard = { id: Date.now().toString(), title: newCardTitle };
+    setCards([...cards, newCard]);
+    setNewCardTitle("");
+    setAddingCard(false);
+  };
+
   return (
-    <div key={list.id} className="">
-      <Item className="min-w-[300px] max-w-[300px] ">
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 1,
-            gap: 0,
-         
-          
-          }}
-        >
-          <Typography
-            variant="h6"
+    <Paper
+      elevation={3}
+      sx={{
+        minWidth: 280,
+        maxWidth: 280,
+        p: 1,
+        borderRadius: 2,
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: "#F1F2F4",
+        maxHeight: "360px",
+      }}
+    >
+      {/* Header */}
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        px={1}
+        py={0.5}
+      >
+        <Typography variant="subtitle1" fontWeight={500}>
+          {list.title}
+        </Typography>
+        <IconButton size="small">
+          <MoreVertIcon fontSize="small" />
+        </IconButton>
+      </Box>
+
+      <Box
+        flex={1}
+        overflow="auto"
+        display="flex"
+        flexDirection="column"
+        gap={1}
+        px={1}
+      >
+        {cards.map((card) => (
+          <Paper
+            key={card.id}
             sx={{
-              wordWrap: "break-word",
-              whiteSpace: "normal",
-              overflowWrap: "break-word",
-              wordBreak: "break-word",
-              maxWidth: "500px",
-              flex: 1,
-              alignSelf: "flex-start",
+              p: 1,
+              bgcolor: "##FFFFFF",
+              borderRadius: 1,
+              margin: "1px 0",
             }}
           >
-            {editMode && editingListId === list.id ? (
-              <Box sx={{ display: "flex" }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  value={newListTitle}
-                  onChange={(e) => setNewListTitle(e.target.value)}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment
-                        position="end"
-                        sx={{ marginRight: "-14px", padding: 0 }}
-                      >
-                        <Button
-                          className="text-nowrap ml-100"
-                          variant="contained"
-                          size="medium"
-                          onClick={async () => {
-                            await handleListEdit(list.id, newListTitle);
-                            setNewListTitle("");
-                            setEditMode(false);
-                          }}
-                        >
-                          OK
-                        </Button>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Box>
-            ) : (
-              <>
-                <div className="flex justify-between items-center ">
-                  <Typography variant="h6" className="pl-3 text-black">
-                    {list.title}
-                  </Typography>
-                  <CustomizedMenus
-                    handleListEdit={handleListEdit}
-                    listId={list.id}
-                    handleDeleteList={handleDeleteList}
-                  />
-                </div>
-                <hr className="border-gray-400" />
-                <CardBox
-                  list={list}
-                  cardsByList={cardsByList}
-                  showAddCardForList={showAddCardForList}
-                  cardEditMode={cardEditMode}
-                  selectedCard={selectedCard}
-                  descEditMode={descEditMode}
-                  editCardDesc={editCardDesc}
-                  setShowAddCardForList={setShowAddCardForList}
-                  newCardTitles={newCardTitles}
-                  setNewCardTitles={setNewCardTitles}
-                  handleCreateCard={handleCreateCard}
-                  handleDeleteCard={handleDeleteCard}
-                  setCardEditMode={setCardEditMode}
-                  editingCardId={editingCardId}
-                  setEditingCardId={setEditingCardId}
-                  editingCardTitle={editingCardTitle}
-                  setEditingCardTitle={setEditingCardTitle}
-                  handleUpdateCard={handleUpdateCard}
-                  handleOldCardsTitle={handleOldCardsTitle}
-                  setSelectedCard={setSelectedCard}
-                  setEditCardDesc={setEditCardDesc}
-                  setDescEditMode={setDescEditMode}
-                  handleUpdateDesc={handleUpdateDesc}
-                  getOldTitle={getOldTitle}
-                />
-              </>
-            )}
-          </Typography>
-        </Box>
-      </Item>
-    </div>
+            {card.title}
+          </Paper>
+        ))}
+      </Box>
+
+      <Box px={1} mt={1}>
+        {!addingCard ? (
+          <Button
+            startIcon={<AddIcon />}
+            onClick={() => setAddingCard(true)}
+            sx={{
+              justifyContent: "flex-start",
+              color: "text.secondary",
+              textTransform: "none",
+              fontSize: "0.9rem",
+              width: "100%",
+            }}
+          >
+            Add a card
+          </Button>
+        ) : (
+          <Box display="flex" flexDirection="column" gap={1}>
+            <TextField
+              size="small"
+              placeholder="Enter a title for this card"
+              value={newCardTitle}
+              onChange={(e) => setNewCardTitle(e.target.value)}
+              fullWidth
+              autoFocus
+            />
+            <Box display="flex" gap={1}>
+              <Button variant="contained" size="small" onClick={handleAddCard}>
+                Add
+              </Button>
+              <Button
+                size="small"
+                onClick={() => {
+                  setAddingCard(false);
+                  setNewCardTitle("");
+                }}
+              >
+                Cancel
+              </Button>
+            </Box>
+          </Box>
+        )}
+      </Box>
+    </Paper>
   );
-}
+};
+
 export default ListCard;

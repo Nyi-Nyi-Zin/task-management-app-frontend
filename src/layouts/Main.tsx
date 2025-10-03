@@ -3,17 +3,15 @@ import Nav from "../components/Nav";
 
 const Main = () => {
   const location = useLocation();
-
   const hideNavbarPaths = ["/login", "/register"];
   const shouldHideNavbar = hideNavbarPaths.includes(location.pathname);
 
-  
-
   return (
-    <section className="mx-auto w-full  ">
+    <section className="flex flex-col min-h-screen">
       {!shouldHideNavbar && <Nav />}
-      
-      <Outlet />
+      <main className="flex-1 overflow-y-auto">
+        <Outlet />
+      </main>
     </section>
   );
 };

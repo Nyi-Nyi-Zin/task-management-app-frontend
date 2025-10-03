@@ -64,10 +64,7 @@ function BoardCard({
             </Button>
           </div>
         ) : (
-          <Typography
-            variant="body2"
-            className="truncate text-center w-full text-start"
-          >
+          <Typography variant="body2" className="truncate  w-full text-start">
             {item.title}
           </Typography>
         )}

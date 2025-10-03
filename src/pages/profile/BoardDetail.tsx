@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useList } from "../../hooks/useList";
 import { useCard } from "../../hooks/useCard";
-import Listss from "../../components/Profile/List";
+import Lists from "../../components/Profile/List";
 import { useGetSingleBoard } from "../../hooks/useBoard";
 
 export default function BoardDetail() {
@@ -51,9 +51,9 @@ export default function BoardDetail() {
   };
 
   return (
-    <section className="flex justify-center items-start">
-      <div className="w-full mx-auto">
-        <Listss boardDetails={boardDetails} allLists={safeLists} />
+    <section className="flex justify-center items-start bg-[#0079BF]">
+      <div className="w-full mx-auto ">
+        <Lists boardDetails={boardDetails} allLists={safeLists} />
       </div>
     </section>
   );
