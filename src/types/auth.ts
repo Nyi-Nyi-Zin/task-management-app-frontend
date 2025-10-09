@@ -1,10 +1,10 @@
-import type { LoginSchema } from "@/schemas/auth.schema";
-import type { UserResponse } from "./user";
+import type { LoginFormValues } from "@/schemas/auth/login.schema";
+import type { User } from "./user";
 
 export interface LoginResponse {
-  success: boolean;
+  isSuccess: boolean;
   message: string;
-  user: Pick<UserResponse, "id" | "userId" | "name" | "email">;
+  user: User;
 }
 
 export interface RefreshResponse {
@@ -21,7 +21,7 @@ export interface AuthenticatedUser {
 export interface AuthContextType {
   user: AuthenticatedUser | null;
   isLoading: boolean;
-  login: (credentials: LoginSchema) => Promise<void>;
+  login: (credentials: LoginFormValues) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
 }

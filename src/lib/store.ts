@@ -10,7 +10,7 @@ class DataStore {
 
   // Auth
   register(email: string, password: string, name: string): User {
-    const existingUser = this.users.find(u => u.email === email);
+    const existingUser = this.users.find((u) => u.email === email);
     if (existingUser) {
       throw new Error("User already exists");
     }
@@ -27,7 +27,7 @@ class DataStore {
   }
 
   login(email: string, password: string): User {
-    const user = this.users.find(u => u.email === email);
+    const user = this.users.find((u) => u.email === email);
     if (!user) {
       throw new Error("Invalid credentials");
     }
@@ -43,7 +43,7 @@ class DataStore {
 
   getCurrentUser(): User | null {
     if (this.currentUser) return this.currentUser;
-    
+
     const stored = localStorage.getItem("currentUser");
     if (stored) {
       this.currentUser = JSON.parse(stored);
@@ -53,7 +53,7 @@ class DataStore {
 
   // Boards
   getBoards(userId: string): Board[] {
-    return this.boards.filter(b => b.userId === userId);
+    return this.boards.filter((b) => b.userId === userId);
   }
 
   createBoard(title: string, userId: string): Board {
@@ -69,10 +69,10 @@ class DataStore {
   }
 
   deleteBoard(boardId: string) {
-    this.boards = this.boards.filter(b => b.id !== boardId);
-    this.lists = this.lists.filter(l => l.boardId !== boardId);
-    this.cards = this.cards.filter(c => {
-      const list = this.lists.find(l => l.id === c.listId);
+    this.boards = this.boards.filter((b) => b.id !== boardId);
+    this.lists = this.lists.filter((l) => l.boardId !== boardId);
+    this.cards = this.cards.filter((c) => {
+      const list = this.lists.find((l) => l.id === c.listId);
       return list?.boardId !== boardId;
     });
     this.saveToLocalStorage();
@@ -80,9 +80,7 @@ class DataStore {
 
   // Lists
   getLists(boardId: string): List[] {
-    return this.lists
-      .filter(l => l.boardId === boardId)
-      .sort((a, b) => a.order - b.order);
+    return this.lists.filter((l) => l.boardId === boardId).sort((a, b) => a.order - b.order);
   }
 
   createList(title: string, boardId: string): List {
@@ -99,7 +97,7 @@ class DataStore {
   }
 
   updateListOrder(listId: string, newOrder: number) {
-    const list = this.lists.find(l => l.id === listId);
+    const list = this.lists.find((l) => l.id === listId);
     if (list) {
       list.order = newOrder;
       this.saveToLocalStorage();
@@ -107,7 +105,7 @@ class DataStore {
   }
 
   updateList(listId: string, updates: Partial<List>) {
-    const list = this.lists.find(l => l.id === listId);
+    const list = this.lists.find((l) => l.id === listId);
     if (list) {
       Object.assign(list, updates);
       this.saveToLocalStorage();
@@ -115,16 +113,14 @@ class DataStore {
   }
 
   deleteList(listId: string) {
-    this.lists = this.lists.filter(l => l.id !== listId);
-    this.cards = this.cards.filter(c => c.listId !== listId);
+    this.lists = this.lists.filter((l) => l.id !== listId);
+    this.cards = this.cards.filter((c) => c.listId !== listId);
     this.saveToLocalStorage();
   }
 
   // Cards
   getCards(listId: string): Card[] {
-    return this.cards
-      .filter(c => c.listId === listId)
-      .sort((a, b) => a.order - b.order);
+    return this.cards.filter((c) => c.listId === listId).sort((a, b) => a.order - b.order);
   }
 
   createCard(title: string, listId: string): Card {
@@ -143,7 +139,7 @@ class DataStore {
   }
 
   updateCard(cardId: string, updates: Partial<Card>) {
-    const card = this.cards.find(c => c.id === cardId);
+    const card = this.cards.find((c) => c.id === cardId);
     if (card) {
       Object.assign(card, updates);
       this.saveToLocalStorage();
@@ -151,7 +147,7 @@ class DataStore {
   }
 
   updateCardOrder(cardId: string, newListId: string, newOrder: number) {
-    const card = this.cards.find(c => c.id === cardId);
+    const card = this.cards.find((c) => c.id === cardId);
     if (card) {
       card.listId = newListId;
       card.order = newOrder;
@@ -160,7 +156,7 @@ class DataStore {
   }
 
   deleteCard(cardId: string) {
-    this.cards = this.cards.filter(c => c.id !== cardId);
+    this.cards = this.cards.filter((c) => c.id !== cardId);
     this.saveToLocalStorage();
   }
 
