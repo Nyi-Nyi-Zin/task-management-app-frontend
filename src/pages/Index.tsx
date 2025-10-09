@@ -2,27 +2,29 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { BoardsPage } from "./BoardsPage";
 import { BoardPage } from "./BoardPage";
-import { dataStore } from "@/lib/store";
 import { Board } from "@/types/board";
+import {} from "@/providers/auth-provider"; // Use your AuthContext
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, isLoading, logout } = useAuth(); // Get user from context
   const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
-  const user = dataStore.getCurrentUser(); // check if user is logged in
 
+  // Redirect unauthenticated users
   useEffect(() => {
-    if (!user) {
-      navigate("/auth"); // redirect to login/register page
+    if (!isLoading && !user) {
+      navigate("/auth");
     }
-  }, [navigate, user]);
+  }, [navigate, user, isLoading]);
 
-  const handleLogout = () => {
-    dataStore.logout();
+  const handleLogout = async () => {
+    await logout();
     setSelectedBoard(null);
-    navigate("/auth"); // redirect to login page on logout
+    navigate("/auth");
   };
 
-  if (!user) return null; // prevent rendering BoardsPage while redirecting
+  if (isLoading || !user) return <div>Loading...</div>; // Show loading while checking
 
   if (selectedBoard) {
     return (

@@ -1,33 +1,29 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { dataStore } from "@/lib/store";
 
-const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
+import { useLogin, useRegister } from "@/hooks/useAuth"; // React Query hooks
+import { loginSchema } from "@/schemas/auth/login.schema";
+import { registerSchema } from "@/schemas/auth/register.schema";
+import { z } from "zod";
 
-const registerSchema = loginSchema
-  .extend({
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    confirmPassword: z.string(),
-  })
+// Extend register schema with confirmPassword only for validation
+const registerFormSchema = registerSchema
+  .extend({ confirmPassword: z.string() })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
     path: ["confirmPassword"],
+    message: "Passwords don't match",
   });
 
 type LoginForm = z.infer<typeof loginSchema>;
-type RegisterForm = z.infer<typeof registerSchema>;
+type RegisterForm = z.infer<typeof registerFormSchema>;
 
 interface AuthFormProps {
   onSuccess: () => void;
@@ -42,27 +38,40 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
   });
 
   const registerForm = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: { email: "", password: "", confirmPassword: "", name: "" },
+    resolver: zodResolver(registerFormSchema),
+    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
   });
 
-  const onLogin = (data: LoginForm) => {
+  const loginMutation = useLogin();
+  const registerMutation = useRegister();
+
+  const onLogin = async (data: LoginForm) => {
+    const payload = {
+      email: data.email.trim(),
+      password: data.password.trim(),
+    };
+    console.log("Sending login request:", payload);
     try {
-      dataStore.login(data.email, data.password);
+      await loginMutation.mutateAsync(payload);
       toast.success("Welcome back!");
       onSuccess();
-    } catch (error) {
-      toast.error("Invalid credentials. Try registering first.");
+    } catch (err: any) {
+      toast.error(err?.message || "Invalid credentials");
     }
   };
 
-  const onRegister = (data: RegisterForm) => {
+  const onRegister = async (data: RegisterForm) => {
     try {
-      dataStore.register(data.email, data.password, data.name);
+      await registerMutation.mutateAsync({
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
       toast.success("Account created successfully!");
-      onSuccess();
-    } catch (error: any) {
-      toast.error(error.message || "Registration failed");
+      setActiveTab("login"); // switch to login tab
+      registerForm.reset();
+    } catch (err: any) {
+      toast.error(err?.message || "Registration failed");
     }
   };
 
@@ -70,11 +79,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-secondary/20 p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="text-center">
-          {/* <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-fit">
-            <UserPlus className="h-8 w-8 text-primary" />
-          </div> */}
           <CardTitle className="text-2xl">Welcome to TaskFlow</CardTitle>
-          {/* <CardDescription>Sign in to manage your boards</CardDescription> */}
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
@@ -83,6 +88,7 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
               <TabsTrigger value="register">Register</TabsTrigger>
             </TabsList>
 
+            {/* LOGIN TAB */}
             <TabsContent value="login">
               <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                 <div className="space-y-2">
@@ -115,13 +121,14 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
                   )}
                 </div>
 
-                <Button type="submit" className="w-full gap-2">
+                <Button type="submit" className="w-full gap-2" disabled={loginMutation.isPending}>
                   <LogIn className="h-4 w-4" />
-                  Sign In
+                  {loginMutation.isPending ? "Signing In..." : "Sign In"}
                 </Button>
               </form>
             </TabsContent>
 
+            {/* REGISTER TAB */}
             <TabsContent value="register">
               <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
                 <div className="space-y-2">
@@ -183,9 +190,13 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
                   )}
                 </div>
 
-                <Button type="submit" className="w-full gap-2">
+                <Button
+                  type="submit"
+                  className="w-full gap-2"
+                  disabled={registerMutation.isPending}
+                >
                   <UserPlus className="h-4 w-4" />
-                  Create Account
+                  {registerMutation.isPending ? "Creating..." : "Create Account"}
                 </Button>
               </form>
             </TabsContent>
