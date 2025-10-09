@@ -1,61 +1,30 @@
-import {
-  createBrowserRouter,
-  Navigate,
-  RouterProvider,
-} from "react-router-dom";
-import Main from "./layouts/Main";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { RouterProvider } from "react-router-dom";
+import { Provider } from "react-redux";
+import { store } from "./store";
+import { AuthProvider } from "./providers/auth-provider";
+import { SyncProvider } from "./providers/sync-provider";
+import { routes } from "./lib/react-router/routes";
 
-import Register from "./pages/Auth/Register";
-import Login from "./pages/Auth/Login";
-import AuthProvider from "./providers/AuthProvider";
-import Profile from "./pages/profile/Index";
-import Board from "./pages/profile/Board";
-import ErrorPage from "./pages/ErrorPage";
-import BoardDetail from "./pages/profile/BoardDetail";
+const queryClient = new QueryClient();
 
-function App() {
-  const router = createBrowserRouter([
-    {
-      path: "/",
-      element: <Main />,
-      children: [
-        {
-          index: true,
-          element: <Navigate to="/login" replace />,
-        },
-        {
-          path: "/login",
-          element: <Login />,
-        },
-        {
-          path: "/register",
-          element: <Register />,
-        },
-        {
-          path: "/profile",
-          element: (
-            <AuthProvider>
-              <Profile />
-            </AuthProvider>
-          ),
-        },
-        {
-          path: "/board/:boardId",
-          element: (
-            <AuthProvider>
-              <BoardDetail />
-            </AuthProvider>
-          ),
-        },
-        {
-          path: "*",
-          element: <ErrorPage />,
-        },
-      ],
-    },
-  ]);
-
-  return <RouterProvider router={router} />;
-}
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <Provider store={store}>
+      <TooltipProvider>
+        <AuthProvider>
+          <SyncProvider>
+            <Toaster />
+            <Sonner />
+            <RouterProvider router={routes} />
+          </SyncProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </Provider>
+  </QueryClientProvider>
+);
 
 export default App;
