@@ -7,14 +7,6 @@ import { LoginFormValues } from "@/schemas/auth/login.schema";
 import { RegisterFormValues } from "@/schemas/auth/register.schema";
 import { AuthContextType, LoginResponse } from "@/types/auth";
 
-// export function useAuth() {
-//   const context = useContext(AuthContext);
-//   if (context === undefined) {
-//     throw new Error("useAuth must be used within an AuthProvider");
-//   }
-//   return context;
-// }
-
 export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
