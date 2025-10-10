@@ -1,7 +1,7 @@
 import { Trash2, Calendar } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Board } from "@/lib/types";
+import { Board } from "@/types/board";
 import { format } from "date-fns";
 
 interface BoardCardProps {
@@ -12,7 +12,7 @@ interface BoardCardProps {
 
 export function BoardCard({ board, onClick, onDelete }: BoardCardProps) {
   return (
-    <Card 
+    <Card
       className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 border-l-4 border-l-primary"
       onClick={onClick}
     >

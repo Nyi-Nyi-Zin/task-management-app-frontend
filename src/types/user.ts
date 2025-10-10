@@ -10,6 +10,15 @@ export interface User {
   updatedAt: string;
 }
 
+export interface CurrentUserResponse {
+  isSuccess: boolean;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
 export interface CreateUserDto {
   name: string;
   email: string;

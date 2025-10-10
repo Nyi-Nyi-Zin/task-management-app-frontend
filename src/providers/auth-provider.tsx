@@ -17,9 +17,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         const response = await authApi.getCurrentUser();
         setUser({
-          id: response.id,
-          email: response.email,
-          name: response.name,
+          id: response.user.id,
+          email: response.user.email,
+          name: response.user.name,
         });
       } catch {
         setUser(null);

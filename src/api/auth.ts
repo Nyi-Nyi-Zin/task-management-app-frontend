@@ -1,6 +1,6 @@
 import api from "@/lib/axios/api";
 import type { LoginResponse, RefreshResponse } from "@/types/auth";
-import type { User } from "@/types/user";
+import type { CurrentUserResponse, User } from "@/types/user";
 import type { LoginFormValues } from "@/schemas/auth/login.schema";
 import { RegisterFormValues } from "@/schemas/auth/register.schema";
 
@@ -23,8 +23,8 @@ export const authApi = {
     return response.data;
   },
 
-  getCurrentUser: async (): Promise<User> => {
-    const response = await api.get<User>("/me");
+  getCurrentUser: async (): Promise<CurrentUserResponse> => {
+    const response = await api.get<CurrentUserResponse>("/me");
     return response.data;
   },
 };

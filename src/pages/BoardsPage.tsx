@@ -6,16 +6,43 @@ import { BoardCard } from "@/components/boards/BoardCard";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { dataStore } from "@/lib/store";
 import { toast } from "sonner";
-import { Board } from "@/lib/types";
+import { Board } from "@/types/board";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { BoardPage } from "@/pages/BoardPage";
 
-interface BoardsPageProps {
-  onSelectBoard: (board: Board) => void;
-  onLogout: () => void;
-}
+export function BoardsPage() {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
 
-export function BoardsPage({ onSelectBoard, onLogout }: BoardsPageProps) {
+  const handleLogout = async () => {
+    await logout();
+    setSelectedBoard(null);
+    navigate("/auth");
+  };
+
+  const handleSelectBoard = (board: Board) => {
+    setSelectedBoard(board);
+  };
+
+  const handleBackToBoards = () => {
+    setSelectedBoard(null);
+  };
+
+  // If a board is selected, show the BoardPage
+  if (selectedBoard) {
+    return (
+      <BoardPage
+        board={selectedBoard}
+        onBack={handleBackToBoards}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
   const queryClient = useQueryClient();
-  const user = dataStore.getCurrentUser();
 
   const { data: boards = [] } = useQuery({
     queryKey: ["boards", user?.id],
@@ -59,10 +86,10 @@ export function BoardsPage({ onSelectBoard, onLogout }: BoardsPageProps) {
                 <p className="text-sm text-muted-foreground">Welcome back, {user?.name}</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <ThemeToggle />
-              <Button variant="outline" size="sm" onClick={onLogout} className="gap-2">
+              <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2">
                 <LogOut className="h-4 w-4" />
                 <span className="hidden sm:inline">Logout</span>
               </Button>
@@ -92,7 +119,7 @@ export function BoardsPage({ onSelectBoard, onLogout }: BoardsPageProps) {
               <BoardCard
                 key={board.id}
                 board={board}
-                onClick={() => onSelectBoard(board)}
+                onClick={() => handleSelectBoard(board)}
                 onDelete={(e) => {
                   e.stopPropagation();
                   deleteBoardMutation.mutate(board.id);
