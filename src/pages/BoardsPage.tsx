@@ -3,107 +3,74 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CreateBoardDialog } from "@/components/boards/CreateBoardDialog";
 import { BoardCard } from "@/components/boards/BoardCard";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { dataStore } from "@/lib/store";
 import { toast } from "sonner";
-import { Board } from "@/types/board";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { BoardPage } from "@/pages/BoardPage";
+import { useBoards, useCreateBoard, useDeleteBoard } from "@/hooks/useBoard";
+import type { Board } from "@/types/board";
 
 export function BoardsPage() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
 
+  // --- Hooks ---
+  const { data: boards = [], isLoading } = useBoards();
+  const createBoardMutation = useCreateBoard();
+  const deleteBoardMutation = useDeleteBoard();
+
+  // --- Handlers ---
   const handleLogout = async () => {
     await logout();
-    setSelectedBoard(null);
     navigate("/auth");
   };
 
   const handleSelectBoard = (board: Board) => {
-    setSelectedBoard(board);
+    navigate(`/boards/${board.id}`); // redirect to board detail route
   };
-
-  const handleBackToBoards = () => {
-    setSelectedBoard(null);
-  };
-
-  // If a board is selected, show the BoardPage
-  if (selectedBoard) {
-    return (
-      <BoardPage
-        board={selectedBoard}
-        onBack={handleBackToBoards}
-        onLogout={handleLogout}
-      />
-    );
-  }
-
-  const queryClient = useQueryClient();
-
-  const { data: boards = [] } = useQuery({
-    queryKey: ["boards", user?.id],
-    queryFn: () => dataStore.getBoards(user!.id),
-    enabled: !!user,
-  });
-
-  const createBoardMutation = useMutation({
-    mutationFn: (title: string) => {
-      const board = dataStore.createBoard(title, user!.id);
-      return Promise.resolve(board);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
-      toast.success("Board created successfully!");
-    },
-  });
-
-  const deleteBoardMutation = useMutation({
-    mutationFn: (boardId: string) => {
-      dataStore.deleteBoard(boardId);
-      return Promise.resolve();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["boards"] });
-      toast.success("Board deleted");
-    },
-  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
+      {/* Header */}
       <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Layout className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">My Boards</h1>
-                <p className="text-sm text-muted-foreground">Welcome back, {user?.name}</p>
-              </div>
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Layout className="h-6 w-6 text-primary" />
             </div>
+            <div>
+              <h1 className="text-2xl font-bold">My Boards</h1>
+              <p className="text-sm text-muted-foreground">Welcome back, {user?.name}</p>
+            </div>
+          </div>
 
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
-              <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2">
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Logout</span>
-              </Button>
-            </div>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2">
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </Button>
           </div>
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <CreateBoardDialog onCreate={(title) => createBoardMutation.mutate(title)} />
+          <CreateBoardDialog
+            onCreate={(title: string) =>
+              createBoardMutation.mutate(
+                { title },
+                {
+                  onSuccess: () => toast.success("Board created successfully!"),
+                },
+              )
+            }
+          />
         </div>
 
-        {boards.length === 0 ? (
+        {isLoading ? (
+          <p>Loading boards...</p>
+        ) : boards.length === 0 ? (
           <div className="text-center py-16">
             <div className="inline-flex p-4 rounded-full bg-muted/50 mb-4">
               <Layout className="h-12 w-12 text-muted-foreground" />
@@ -122,7 +89,9 @@ export function BoardsPage() {
                 onClick={() => handleSelectBoard(board)}
                 onDelete={(e) => {
                   e.stopPropagation();
-                  deleteBoardMutation.mutate(board.id);
+                  deleteBoardMutation.mutate(board.id, {
+                    onSuccess: () => toast.success("Board deleted"),
+                  });
                 }}
               />
             ))}
