@@ -1,36 +1,24 @@
+// AppRouter.tsx
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AuthPage } from "@/pages/auth/AuthPage";
-import { BoardPage } from "@/pages/BoardPage";
-import Index from "@/pages/Index";
-import { createBrowserRouter } from "react-router-dom";
+import { BoardsPage } from "@/pages/BoardsPage";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-export const routes = createBrowserRouter([
-  {
-    path: "/auth",
-    element: <AuthPage />,
-  },
-  {
-    path: "/",
-    element: (
-      <ProtectedRoute>
-        <Index />
-      </ProtectedRoute>
-    ),
-    // errorElement: <ErrorPage />,
-    children: [
-      {
-        index: true,
-        element: <BoardPage />,
-      },
-      // {
-      //   path: "/items",
-      //   element: <ItemsPage />,
-      // },
+export const AppRouter = () => {
+  const router = createBrowserRouter([
+    {
+      path: "/auth",
+      element: <AuthPage />,
+    },
+    {
+      path: "/",
+      element: (
+        <ProtectedRoute>
+          <BoardsPage />
+        </ProtectedRoute>
+      ),
+    },
+  ]);
 
-      // {
-      //   path: "*",
-      //   element: <NotFoundPage />,
-      // },
-    ],
-  },
-]);
+  return <RouterProvider router={router} />;
+};

@@ -3,6 +3,7 @@ import { authApi } from "@/api/auth";
 import type { AuthenticatedUser, AuthContextType } from "../types/auth";
 import { AuthContext } from "../contexts/auth-context";
 import { loginSchema, type LoginFormValues } from "@/schemas/auth/login.schema";
+import { useLogin } from "@/hooks/useAuth";
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -12,14 +13,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const loginMutation = useLogin();
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const response = await authApi.getCurrentUser();
         setUser({
-          id: response.id,
-          email: response.email,
-          name: response.name,
+          id: response.user.id,
+          email: response.user.email,
+          name: response.user.name,
         });
       } catch {
         setUser(null);
@@ -31,8 +34,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     checkAuth();
   }, []);
 
+  // const login = async (credentials: LoginFormValues) => {
+  //   const response = await authApi.login(credentials);
+  //   setUser(response.user);
+  // };
+
   const login = async (credentials: LoginFormValues) => {
-    const response = await authApi.login(credentials);
+    const response = await loginMutation.mutateAsync(credentials);
     setUser(response.user);
   };
 
@@ -50,6 +58,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     login,
     logout,
     isAuthenticated: !!user,
+    loginLoading: loginMutation.isPending,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
