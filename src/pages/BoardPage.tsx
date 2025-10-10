@@ -9,16 +9,13 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { dataStore } from "@/lib/store";
-import { Board } from "@/types/board";
-// import {Card} from '@/types/'
+import { Board, Card, List } from "@/types/board";
 import { BoardHeader } from "@/components/board/BoardHeader";
 import { ListColumn } from "@/components/board/ListColumn";
 import { AddListButton } from "@/components/board/AddListButton";
 import { CardDetailsDialog } from "@/components/board/CardDetailsDialog";
 import { CardItem } from "@/components/board/CardItem";
-import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface BoardPageProps {
   board: Board;
@@ -26,161 +23,56 @@ interface BoardPageProps {
   onLogout: () => void;
 }
 
-export function BoardPage({ board, onBack, onLogout }: BoardPageProps) {
-  const queryClient = useQueryClient();
-  const user = dataStore.getCurrentUser();
+export function BoardPage({ board, onBack }: BoardPageProps) {
+  const { user, logout } = useAuth();
   const [activeCard, setActiveCard] = useState<Card | null>(null);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
-  const { data: lists = [] } = useQuery({
-    queryKey: ["lists", board.id],
-    queryFn: () => dataStore.getLists(board.id),
-  });
+  // Mock lists & cards for UI
+  const [lists, setLists] = useState<List[]>([
+    { id: "1", title: "Todo", order: 0 },
+    { id: "2", title: "In Progress", order: 1 },
+    { id: "3", title: "Done", order: 2 },
+  ]);
 
-  const { data: allCards = [] } = useQuery({
-    queryKey: ["cards", board.id],
-    queryFn: () => {
-      return lists.flatMap((list) => dataStore.getCards(list.id));
-    },
-    enabled: lists.length > 0,
-  });
-
-  const createListMutation = useMutation({
-    mutationFn: (title: string) => {
-      const list = dataStore.createList(title, board.id);
-      return Promise.resolve(list);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lists"] });
-      toast.success("List created!");
-    },
-  });
-
-  const deleteListMutation = useMutation({
-    mutationFn: (listId: string) => {
-      dataStore.deleteList(listId);
-      return Promise.resolve();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lists"] });
-      queryClient.invalidateQueries({ queryKey: ["cards"] });
-      toast.success("List deleted");
-    },
-  });
-
-  const createCardMutation = useMutation({
-    mutationFn: ({ title, listId }: { title: string; listId: string }) => {
-      const card = dataStore.createCard(title, listId);
-      return Promise.resolve(card);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cards"] });
-      toast.success("Card created!");
-    },
-  });
-
-  const updateCardMutation = useMutation({
-    mutationFn: ({ cardId, updates }: { cardId: string; updates: Partial<Card> }) => {
-      dataStore.updateCard(cardId, updates);
-      return Promise.resolve();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cards"] });
-      toast.success("Card updated!");
-    },
-  });
-
-  const deleteCardMutation = useMutation({
-    mutationFn: (cardId: string) => {
-      dataStore.deleteCard(cardId);
-      return Promise.resolve();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cards"] });
-      toast.success("Card deleted");
-    },
-  });
+  const [allCards, setAllCards] = useState<Card[]>([
+    { id: "1", title: "Task 1", listId: "1", isDone: false, order: 0 },
+    { id: "2", title: "Task 2", listId: "1", isDone: false, order: 1 },
+    { id: "3", title: "Task 3", listId: "2", isDone: false, order: 0 },
+  ]);
 
   const handleDragStart = (event: DragStartEvent) => {
     const card = allCards.find((c) => c.id === event.active.id);
-    if (card) {
-      setActiveCard(card);
-    }
+    if (card) setActiveCard(card);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveCard(null);
-
     if (!over) return;
 
-    // Check if dragging a list
-    const activeList = lists.find((l) => l.id === active.id);
-    if (activeList) {
-      const overList = lists.find((l) => l.id === over.id);
-      if (overList && activeList.id !== overList.id) {
-        const oldIndex = lists.findIndex((l) => l.id === activeList.id);
-        const newIndex = lists.findIndex((l) => l.id === overList.id);
-        const reordered = arrayMove(lists, oldIndex, newIndex);
-
-        // Update order in store
-        reordered.forEach((list, index) => {
-          dataStore.updateList(list.id, { order: index });
-        });
-
-        queryClient.invalidateQueries({ queryKey: ["lists"] });
-        toast.success("List moved!");
-      }
+    // Dragging a list
+    const activeListIndex = lists.findIndex((l) => l.id === active.id);
+    const overListIndex = lists.findIndex((l) => l.id === over.id);
+    if (activeListIndex !== -1 && overListIndex !== -1 && activeListIndex !== overListIndex) {
+      const newLists = arrayMove(lists, activeListIndex, overListIndex);
+      setLists(newLists);
       return;
     }
 
-    // Check if dragging a card
-    const activeCard = allCards.find((c) => c.id === active.id);
-    if (!activeCard) return;
-
-    // Check if dropped on a list
-    const targetList = lists.find((l) => l.id === over.id);
-    if (targetList && activeCard.listId !== targetList.id) {
-      const targetCards = allCards.filter((c) => c.listId === targetList.id);
-      dataStore.updateCardOrder(activeCard.id, targetList.id, targetCards.length);
-      queryClient.invalidateQueries({ queryKey: ["cards"] });
-      toast.success("Card moved!");
-      return;
-    }
-
-    // Check if dropped on another card
-    const overCard = allCards.find((c) => c.id === over.id);
-    if (overCard && activeCard.id !== overCard.id) {
-      const sameList = activeCard.listId === overCard.listId;
-
-      if (sameList) {
-        const listCards = allCards.filter((c) => c.listId === activeCard.listId);
-        const oldIndex = listCards.findIndex((c) => c.id === activeCard.id);
-        const newIndex = listCards.findIndex((c) => c.id === overCard.id);
-
-        const reordered = arrayMove(listCards, oldIndex, newIndex);
-        reordered.forEach((card, index) => {
-          dataStore.updateCardOrder(card.id, card.listId, index);
-        });
-      } else {
-        dataStore.updateCardOrder(activeCard.id, overCard.listId, overCard.order);
-      }
-
-      queryClient.invalidateQueries({ queryKey: ["cards"] });
-      toast.success("Card moved!");
+    // Dragging a card
+    const activeCardIndex = allCards.findIndex((c) => c.id === active.id);
+    const overCardIndex = allCards.findIndex((c) => c.id === over.id);
+    if (activeCardIndex !== -1 && overCardIndex !== -1 && activeCardIndex !== overCardIndex) {
+      const newCards = arrayMove(allCards, activeCardIndex, overCardIndex);
+      setAllCards(newCards);
     }
   };
 
   const handleToggleCardDone = (cardId: string, isDone: boolean) => {
-    updateCardMutation.mutate({ cardId, updates: { isDone } });
+    setAllCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, isDone } : c)));
   };
 
   return (
@@ -189,7 +81,7 @@ export function BoardPage({ board, onBack, onLogout }: BoardPageProps) {
         boardTitle={board.title}
         userName={user?.name || ""}
         onBack={onBack}
-        onLogout={onLogout}
+        onLogout={logout}
       />
 
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -207,24 +99,39 @@ export function BoardPage({ board, onBack, onLogout }: BoardPageProps) {
                       key={list.id}
                       list={list}
                       cards={cards}
-                      onAddCard={(title) => createCardMutation.mutate({ title, listId: list.id })}
-                      onDeleteList={() => deleteListMutation.mutate(list.id)}
+                      onAddCard={(title) =>
+                        setAllCards((prev) => [
+                          ...prev,
+                          {
+                            id: (prev.length + 1).toString(),
+                            title,
+                            listId: list.id,
+                            isDone: false,
+                            order: cards.length,
+                          },
+                        ])
+                      }
+                      onDeleteList={() => setLists((prev) => prev.filter((l) => l.id !== list.id))}
                       onCardClick={setSelectedCard}
                       onToggleCardDone={handleToggleCardDone}
                     />
                   );
                 })}
               </SortableContext>
-
-              <AddListButton onAdd={(title) => createListMutation.mutate(title)} />
+              <AddListButton
+                onAdd={(title) =>
+                  setLists((prev) => [
+                    ...prev,
+                    { id: (prev.length + 1).toString(), title, order: prev.length },
+                  ])
+                }
+              />
             </div>
           </div>
         </div>
 
         <DragOverlay>
-          {activeCard ? (
-            <CardItem card={activeCard} onClick={() => {}} onToggleDone={() => {}} />
-          ) : null}
+          {activeCard && <CardItem card={activeCard} onClick={() => {}} onToggleDone={() => {}} />}
         </DragOverlay>
       </DndContext>
 
@@ -232,8 +139,15 @@ export function BoardPage({ board, onBack, onLogout }: BoardPageProps) {
         card={selectedCard}
         open={!!selectedCard}
         onClose={() => setSelectedCard(null)}
-        onUpdate={(updates) => updateCardMutation.mutate({ cardId: selectedCard!.id, updates })}
-        onDelete={() => deleteCardMutation.mutate(selectedCard!.id)}
+        onUpdate={(updates) =>
+          selectedCard &&
+          setAllCards((prev) =>
+            prev.map((c) => (c.id === selectedCard.id ? { ...c, ...updates } : c)),
+          )
+        }
+        onDelete={() =>
+          selectedCard && setAllCards((prev) => prev.filter((c) => c.id !== selectedCard.id))
+        }
       />
     </div>
   );

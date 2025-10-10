@@ -1,4 +1,3 @@
-// src/types/user.ts
 import type { z } from "zod";
 // import type { userFormSchema } from "@/schemas/auth/register.schema";
 
