@@ -1,135 +1,70 @@
-import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { useDroppable } from "@dnd-kit/core";
-import { Plus, Trash2, GripVertical } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { useState, useRef, useEffect } from "react";
+import { Card as CardUI } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { List, Card as CardType } from "@/lib/types";
-import { CardItem } from "./CardItem";
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { Card as CardType } from "@/types/card";
+import { CardItem } from "./CardItem";
+import { cn } from "@/lib/utils";
 
 interface ListColumnProps {
-  list: List;
+  list: { id: number; title: string };
   cards: CardType[];
   onAddCard: (title: string) => void;
-  onDeleteList: () => void;
-  onCardClick: (card: CardType) => void;
-  onToggleCardDone: (cardId: string, isDone: boolean) => void;
+  onDeleteCard: (cardId: string) => void;
 }
 
-export function ListColumn({ list, cards, onAddCard, onDeleteList, onCardClick, onToggleCardDone }: ListColumnProps) {
+export function ListColumn({ list, cards, onAddCard, onDeleteCard }: ListColumnProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef: setSortableRef,
-    transform,
-    transition,
-  } = useSortable({ id: list.id });
-
-  const { setNodeRef: setDroppableRef } = useDroppable({
-    id: list.id,
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  const setNodeRef = (node: HTMLElement | null) => {
-    setSortableRef(node);
-    setDroppableRef(node);
-  };
-
-  const handleAddCard = () => {
-    if (newCardTitle.trim()) {
-      onAddCard(newCardTitle);
-      setNewCardTitle("");
-      setIsAdding(false);
+  // Focus the input when it appears
+  useEffect(() => {
+    if (isAdding) {
+      requestAnimationFrame(() => inputRef.current?.focus());
     }
+  }, [isAdding]);
+
+  const handleAdd = () => {
+    if (!newCardTitle.trim()) return;
+    onAddCard(newCardTitle); // directly call React Query mutation
+    setNewCardTitle("");
+    setIsAdding(false);
   };
 
   return (
-    <Card ref={setNodeRef} style={style} className="flex-shrink-0 w-80 bg-secondary/30 border-border">
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-4 gap-2">
-          <div
-            {...attributes}
-            {...listeners}
-            className="cursor-grab active:cursor-grabbing"
-          >
-            <GripVertical className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <h3 className="font-semibold text-base flex-1">{list.title}</h3>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onDeleteList}
-            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
+    <CardUI className="flex-shrink-0 w-80 p-4 flex flex-col bg-secondary/30 max-h-[470px]">
+      <h3 className="font-semibold mb-2">{list.title}</h3>
 
-        <div className="space-y-2 min-h-[100px]">
-          <SortableContext items={cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
-            {cards.map((card) => (
-              <CardItem 
-                key={card.id} 
-                card={card} 
-                onClick={() => onCardClick(card)}
-                onToggleDone={onToggleCardDone}
-              />
-            ))}
-          </SortableContext>
-        </div>
-
-        {isAdding ? (
-          <div className="mt-3 space-y-2">
-            <Input
-              autoFocus
-              placeholder="Enter card title..."
-              value={newCardTitle}
-              onChange={(e) => setNewCardTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleAddCard();
-                if (e.key === "Escape") {
-                  setIsAdding(false);
-                  setNewCardTitle("");
-                }
-              }}
-            />
-            <div className="flex gap-2">
-              <Button size="sm" onClick={handleAddCard}>
-                Add Card
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setIsAdding(false);
-                  setNewCardTitle("");
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsAdding(true)}
-            className="w-full mt-3 justify-start gap-2 text-muted-foreground"
-          >
-            <Plus className="h-4 w-4" />
-            Add a card
-          </Button>
-        )}
+      <div className="flex flex-col flex-1 overflow-y-auto gap-2">
+        {cards.map((card) => (
+          <CardItem key={card.id} card={card} onClick={() => {}} onToggleDone={() => {}} />
+        ))}
       </div>
-    </Card>
+
+      {isAdding ? (
+        <div className="mt-2 space-y-2">
+          <Input
+            ref={inputRef}
+            value={newCardTitle}
+            onChange={(e) => setNewCardTitle(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            placeholder="Enter card title..."
+          />
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleAdd}>
+              Add Card
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setIsAdding(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button variant="default" size="default" className="mt-2" onClick={() => setIsAdding(true)}>
+          Add a card
+        </Button>
+      )}
+    </CardUI>
   );
 }

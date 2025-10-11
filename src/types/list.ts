@@ -8,3 +8,11 @@ export interface List {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CreateListRequest {
+  title: string;
+}
+
+export interface UpdateListRequest {
+  title: string;
+}

@@ -1,6 +1,6 @@
 import api from "@/lib/axios/api";
 import type { Board, CreateBoardRequest, UpdateBoardRequest } from "@/types/board";
-import type { ApiResponse } from "@/types/board";
+import type { ApiResponse } from "@/types/common";
 
 export const boardApi = {
   getBoards: async (): Promise<Board[]> => {
@@ -11,7 +11,7 @@ export const boardApi = {
 
   getBoard: async (id: number): Promise<Board> => {
     const response = await api.get<ApiResponse<Board>>(`/boards/${id}`);
-    return response.data.board as Board;
+    return response.data.data as Board;
   },
 
   createBoard: async (data: CreateBoardRequest): Promise<Board> => {

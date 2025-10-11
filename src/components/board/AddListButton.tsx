@@ -57,14 +57,13 @@ export function AddListButton({ onAdd }: AddListButtonProps) {
   }
 
   return (
-    <Card
-      className="flex-shrink-0 w-80 p-4 bg-secondary/30 cursor-pointer hover:bg-secondary/50 transition-colors"
+    <Button
+      variant="default"
+      className="flex-shrink-0 min-w-[20rem]  transition-colors mr-4 "
       onClick={() => setIsAdding(true)}
     >
-      <Button variant="ghost" className="w-full justify-start gap-2">
-        <Plus className="h-5 w-5" />
-        Add a list
-      </Button>
-    </Card>
+      <Plus className="h-5 w-5" />
+      Add a list
+    </Button>
   );
 }

@@ -1,8 +1,8 @@
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ROUTES } from "@/config/routes";
 import { AuthPage } from "@/pages/auth/AuthPage";
-import { BoardPageWrapper } from "@/pages/BoardPageWrapper";
-import { BoardsPage } from "@/pages/BoardsPage";
+import { BoardDetailPage } from "@/pages/board/Index";
+import { Home } from "@/pages/Index";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 export const AppRouter = () => {
@@ -15,7 +15,7 @@ export const AppRouter = () => {
       path: ROUTES.HOME,
       element: (
         <ProtectedRoute>
-          <BoardsPage />
+          <Home />
         </ProtectedRoute>
       ),
     },
@@ -23,7 +23,7 @@ export const AppRouter = () => {
       path: "/boards/:id",
       element: (
         <ProtectedRoute>
-          <BoardPageWrapper />
+          <BoardDetailPage />
         </ProtectedRoute>
       ),
     },

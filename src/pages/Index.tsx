@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useBoards, useCreateBoard, useDeleteBoard } from "@/hooks/useBoard";
 import type { Board } from "@/types/board";
 
-export function BoardsPage() {
+export function Home() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 

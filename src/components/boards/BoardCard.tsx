@@ -3,6 +3,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Board } from "@/types/board";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface BoardCardProps {
   board: Board;
@@ -13,28 +14,36 @@ interface BoardCardProps {
 export function BoardCard({ board, onClick, onDelete }: BoardCardProps) {
   return (
     <Card
-      className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 border-l-4 border-l-primary"
+      className={cn(
+        "cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 border-l-4 border-l-primary flex flex-row justify-between h-12 sm:h-40 md:h-44 lg:h-48 ",
+      )}
       onClick={onClick}
     >
-      <CardHeader>
-        <CardTitle className="text-lg">{board.title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="h-4 w-4" />
-          <span>Created {format(new Date(board.createdAt), "MMM d, yyyy")}</span>
-        </div>
-      </CardContent>
-      <CardFooter>
+      <div className="flex justify-center items-center md:items-start">
+        <CardHeader>
+          <CardTitle className="text-lg">{board.title}</CardTitle>
+        </CardHeader>
+      </div>
+      <div className="flex justify-end items-center md:items-end">
         <Button
           variant="ghost"
           size="sm"
-          onClick={onDelete}
-          className="text-muted-foreground hover:text-destructive ml-auto"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(e);
+          }}
+          className="text-muted-foreground hover:text-white"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
-      </CardFooter>
+      </div>
+
+      {/* <CardFooter className=" bg-yellow-500 h-full text-sm text-muted-foreground px-4 py-2 mt-auto text-start"> */}
+      {/* <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4" />
+          <span>{format(new Date(board.createdAt), "MMM d, yyyy")}</span>
+        </div> */}
+      {/* </CardFooter> */}
     </Card>
   );
 }
