@@ -17,6 +17,9 @@ export interface CreateCardRequest {
 
 // ✅ Input type for updating a card
 export interface UpdateCardRequest {
-  title: string;
+  title?: string;
   description?: string;
+  // allow updating position and listId when moving cards
+  position?: number;
+  listId?: number;
 }

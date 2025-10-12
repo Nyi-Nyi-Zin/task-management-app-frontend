@@ -14,7 +14,8 @@ interface CardItemProps {
 
 export function CardItem({ card, onClick, onToggleDone }: CardItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: card.id,
+    id: card.id.toString(),
+    // keep listId as number in the dnd data so consumers receive numeric ids
     data: { type: "card", listId: card.listId },
   });
 

@@ -39,15 +39,13 @@ export const useCreateCard = (boardId: number) => {
   });
 };
 
-// ✅ Update a card
-export const useUpdateCard = () => {
+export const useUpdateCard = (boardId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ cardId, data }: { cardId: number; data: UpdateCardRequest }) =>
       cardApi.updateCard(cardId, data),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: CARD_KEYS.detail(variables.cardId) });
-      queryClient.invalidateQueries({ queryKey: ["lists"] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: BOARD_KEYS.detail(boardId) });
     },
   });
 };

@@ -21,13 +21,12 @@ export const cardApi = {
     return response.data.data as Card;
   },
 
-  // Update a card by ID
   updateCard: async (cardId: number, data: UpdateCardRequest): Promise<Card> => {
-    const response = await api.put<ApiResponse<Card>>(`/cards/${cardId}`, data);
+    const payload = { cardId, ...data };
+    const response = await api.put<ApiResponse<Card>>(`/cards/${cardId}`, payload);
     return response.data.data as Card;
   },
 
-  // Delete a card by ID
   deleteCard: async (cardId: number): Promise<void> => {
     await api.delete(`/cards/${cardId}`);
   },
