@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card as CardType } from "@/types/card";
 import { CardItem } from "./CardItem";
 import { cn } from "@/lib/utils";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 interface ListColumnProps {
   list: { id: number; title: string };
@@ -37,9 +38,11 @@ export function ListColumn({ list, cards, onAddCard, onDeleteCard }: ListColumnP
       <h3 className="font-semibold mb-2">{list.title}</h3>
 
       <div className="flex flex-col flex-1 overflow-y-auto gap-2">
-        {cards.map((card) => (
-          <CardItem key={card.id} card={card} onClick={() => {}} onToggleDone={() => {}} />
-        ))}
+        <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+          {cards.map((card) => (
+            <CardItem key={card.id} card={card} onClick={() => {}} onToggleDone={() => {}} />
+          ))}
+        </SortableContext>
       </div>
 
       {isAdding ? (

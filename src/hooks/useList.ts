@@ -31,14 +31,15 @@ export const useCreateList = (boardId: number) => {
   });
 };
 
-// ✅ Update a list
 export const useUpdateList = (boardId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ listId, data }: { listId: number; data: UpdateListRequest }) =>
       listApi.updateList(boardId, listId, data),
-    onSuccess: (_data, variables) =>
-      queryClient.invalidateQueries({ queryKey: LIST_KEYS.detail(boardId, variables.listId) }),
+    onSuccess: () => {
+      // Just refetch board after update
+      queryClient.invalidateQueries({ queryKey: BOARD_KEYS.detail(boardId) });
+    },
   });
 };
 

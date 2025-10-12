@@ -9,13 +9,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 interface CardItemProps {
   card: CardType;
   onClick: () => void;
-  onToggleDone: (cardId: string, isDone: boolean) => void;
+  onToggleDone: (cardId: number, isDone: boolean) => void;
 }
 
 export function CardItem({ card, onClick, onToggleDone }: CardItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
-    data: { type: "card" },
+    data: { type: "card", listId: card.listId },
   });
 
   const style = {

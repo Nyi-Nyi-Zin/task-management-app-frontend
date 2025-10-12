@@ -15,6 +15,7 @@ import { AddListButton } from "@/components/board/AddListButton";
 import { useCreateList, useDeleteList } from "@/hooks/useList";
 import { useUpdateCard, useDeleteCard } from "@/hooks/useCard";
 import { useCreateCard } from "@/hooks/useCard";
+import { useUpdateList } from "@/hooks/useList";
 
 interface BoardPageProps {
   board: Board;
@@ -27,6 +28,7 @@ export function BoardPage({ board, onBack, onLogout }: BoardPageProps) {
 
   const createList = useCreateList(board.id);
   const deleteList = useDeleteList(board.id);
+  const updateList = useUpdateList(board.id);
   const createCard = useCreateCard(board.id);
   const updateCard = useUpdateCard();
   const deleteCard = useDeleteCard();
@@ -35,11 +37,31 @@ export function BoardPage({ board, onBack, onLogout }: BoardPageProps) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    // handle card movement if needed
-    updateCard.mutate({
-      cardId: active.id as string,
-      data: { listId: over.id as string },
-    });
+    const activeType = active.data.current?.type;
+    const overType = over.data.current?.type;
+
+    if (activeType === "list" && overType === "list") {
+      const listsWithPosition = board.lists.map((list, index) => ({
+        id: list.id,
+        position: index,
+      }));
+
+      // Call updateList for each
+      listsWithPosition.forEach((l) => {
+        updateList.mutate({ listId: l.id, data: { position: l.position } });
+      });
+    }
+
+    if (activeType === "card") {
+      const newListId = over.data.current?.listId; // 👈 must exist
+      if (!newListId) return;
+
+      updateCard.mutate({
+        cardId: Number(active.id),
+        listId: newListId,
+        position: 0, // optionally compute real drop position
+      });
+    }
   };
 
   return (
