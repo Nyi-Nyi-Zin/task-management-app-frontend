@@ -157,6 +157,9 @@ export function BoardPage({ board, onBack, onLogout }: BoardPageProps) {
                   cards={list.cards || []}
                   onAddCard={(title) => createCard.mutate({ title, listId: list.id })}
                   onDeleteCard={(cardId) => deleteCard.mutate({ cardId })}
+                  onMoveCard={(cardId, newPosition) =>
+                    updateCard.mutate({ cardId, data: { listId: list.id, position: newPosition } })
+                  }
                 />
               ))}
               <AddListButton onAdd={(title) => createList.mutate({ title })} />

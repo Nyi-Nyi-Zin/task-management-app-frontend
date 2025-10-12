@@ -11,6 +11,7 @@ import {
   useSensors,
   PointerSensor,
   closestCenter,
+  useDroppable,
 } from "@dnd-kit/core";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
@@ -19,7 +20,7 @@ interface ListColumnProps {
   cards: CardType[];
   onAddCard: (title: string) => void;
   onDeleteCard: (cardId: number) => void;
-  onMoveCard: (cardId: number, newPosition: number) => void; // new callback
+  onMoveCard: (cardId: number, newPosition: number) => void; // callback to backend
 }
 
 export function ListColumn({ list, cards, onAddCard, onDeleteCard, onMoveCard }: ListColumnProps) {
@@ -28,7 +29,10 @@ export function ListColumn({ list, cards, onAddCard, onDeleteCard, onMoveCard }:
   const [localCards, setLocalCards] = useState<CardType[]>(cards);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // sync local state when props.cards change
+  // Make this list droppable (works even if empty)
+  const { setNodeRef } = useDroppable({ id: list.id.toString(), data: { type: "list" } });
+
+  // Sync local state when props.cards change
   useEffect(() => {
     setLocalCards(cards.slice().sort((a, b) => a.position - b.position));
   }, [cards]);
@@ -53,24 +57,30 @@ export function ListColumn({ list, cards, onAddCard, onDeleteCard, onMoveCard }:
     const oldIndex = localCards.findIndex((c) => c.id.toString() === active.id.toString());
     const newIndex = localCards.findIndex((c) => c.id.toString() === over.id.toString());
 
-    const newCards = arrayMove(localCards, oldIndex, newIndex).map((c, idx) => ({
+    // If dragged over empty space, append to end
+    const finalNewIndex = newIndex === -1 ? localCards.length - 1 : newIndex;
+
+    const newCards = arrayMove(localCards, oldIndex, finalNewIndex).map((c, idx) => ({
       ...c,
       position: idx, // update positions locally
     }));
 
     setLocalCards(newCards);
 
-    // call backend to update position
-    const movedCard = newCards[newIndex];
+    // Call backend to update moved card
+    const movedCard = newCards[finalNewIndex];
     onMoveCard(movedCard.id, movedCard.position);
   };
 
   return (
-    <CardUI className="flex-shrink-0 w-80 p-4 flex flex-col bg-secondary/30 max-h-[470px]">
+    <CardUI
+      ref={setNodeRef}
+      className="flex-shrink-0 w-80 p-4 flex flex-col bg-secondary/30 max-h-[470px]"
+    >
       <h3 className="font-semibold mb-2">{list.title}</h3>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <div className="flex flex-col flex-1 overflow-y-auto gap-2">
+        <div className="flex flex-col flex-1 overflow-y-auto gap-2 min-h-[40px]">
           <SortableContext
             items={localCards.map((c) => c.id.toString())}
             strategy={verticalListSortingStrategy}
