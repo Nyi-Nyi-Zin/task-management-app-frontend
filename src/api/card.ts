@@ -30,4 +30,8 @@ export const cardApi = {
   deleteCard: async (cardId: number): Promise<void> => {
     await api.delete(`/cards/${cardId}`);
   },
+  reorderCards: async (listId: number, cardIds: number[]) => {
+    const response = await api.put<ApiResponse<void>>(`/reorder`, { listId, cardIds });
+    return response.data;
+  },
 };

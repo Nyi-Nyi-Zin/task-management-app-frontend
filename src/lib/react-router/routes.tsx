@@ -1,7 +1,7 @@
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ROUTES } from "@/config/routes";
 import { AuthPage } from "@/pages/auth/AuthPage";
-import { BoardDetailPage } from "@/pages/board/Index";
+import BoardDetailPage from "@/pages/board/Index";
 import { Home } from "@/pages/Index";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 

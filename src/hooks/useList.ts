@@ -51,3 +51,11 @@ export const useDeleteList = (boardId: number) => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: LIST_KEYS.all(boardId) }),
   });
 };
+
+export const useReorderLists = (boardId: number) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (lists: { id: number; position: number }[]) => listApi.reorderLists(boardId, lists),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: BOARD_KEYS.detail(boardId) }),
+  });
+};

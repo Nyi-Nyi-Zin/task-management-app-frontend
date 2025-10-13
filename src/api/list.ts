@@ -31,4 +31,10 @@ export const listApi = {
   deleteList: async (boardId: number, listId: number): Promise<void> => {
     await api.delete(`/boards/${boardId}/lists/${listId}`);
   },
+  reorderLists: async (boardId: number, lists: { id: number; position: number }[]) => {
+    const response = await api.put<ApiResponse<void>>(`/boards/${boardId}/lists/reorder`, {
+      lists,
+    });
+    return response.data;
+  },
 };
