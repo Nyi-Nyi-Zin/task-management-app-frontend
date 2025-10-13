@@ -1,16 +1,20 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { BoardPage } from "@/pages/board/BoardPage";
 import { useBoard } from "@/hooks/useBoard";
+import { useState } from "react";
+import { Card } from "@/types/card";
+import { CardDetailModal } from "@/components/CardDetailModal";
 
 export function BoardDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
+  const boardId = Number(id);
   const navigate = useNavigate();
-  const boardId = id ? parseInt(id, 10) : undefined;
 
+  console.log(boardId);
   const { data: board, isLoading, isError } = useBoard(boardId);
 
   if (isLoading) return <p>Loading board...</p>;
-
+  // console.log(board);
   if (isError || !board)
     return (
       <div className="text-center py-16">
@@ -25,6 +29,13 @@ export function BoardDetailPage() {
     );
 
   return (
-    <BoardPage board={board} onBack={() => navigate("/")} onLogout={() => navigate("/auth")} />
+    <>
+      <BoardPage
+        // onCardClick={handleCardClick}
+        board={board}
+        onBack={() => navigate("/")}
+        onLogout={() => navigate("/auth")}
+      />
+    </>
   );
 }

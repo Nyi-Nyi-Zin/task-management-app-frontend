@@ -62,3 +62,22 @@ export const useDeleteCard = () => {
     },
   });
 };
+export const useToggleCardDone = (boardId?: number) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => cardApi.toggleCardDone(id),
+    onSuccess: (updatedCard) => {
+      // Invalidate board detail query if boardId is available
+      if (boardId) {
+        queryClient.invalidateQueries({ queryKey: BOARD_KEYS.detail(boardId) });
+      }
+
+      // Optimistic update for cards cache
+      queryClient.setQueryData(["cards"], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((card: any) => (card.id === updatedCard.id ? updatedCard : card));
+      });
+    },
+  });
+};

@@ -31,4 +31,9 @@ export const cardApi = {
   deleteCard: async (cardId: number): Promise<void> => {
     await api.delete(`/cards/${cardId}`);
   },
+
+  toggleCardDone: async (id: number): Promise<Card> => {
+    const response = await api.patch<Card>("/toggle", { id });
+    return response.data;
+  },
 };

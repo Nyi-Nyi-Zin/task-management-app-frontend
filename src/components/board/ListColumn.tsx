@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Card as CardUI } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card as CardType } from "@/types/card";
+import { Card, Card as CardType } from "@/types/card";
 import { CardItem } from "./CardItem";
 import { cn } from "@/lib/utils";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -12,9 +12,10 @@ interface ListColumnProps {
   cards: CardType[];
   onAddCard: (title: string) => void;
   onDeleteCard: (cardId: string) => void;
+  onClick?: (card: Card) => void;
 }
 
-export function ListColumn({ list, cards, onAddCard, onDeleteCard }: ListColumnProps) {
+export function ListColumn({ list, cards, onAddCard, onDeleteCard, onClick }: ListColumnProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newCardTitle, setNewCardTitle] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -38,11 +39,9 @@ export function ListColumn({ list, cards, onAddCard, onDeleteCard }: ListColumnP
       <h3 className="font-semibold mb-2">{list.title}</h3>
 
       <div className="flex flex-col flex-1 overflow-y-auto gap-2">
-        <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-          {cards.map((card) => (
-            <CardItem key={card.id} card={card} onClick={() => {}} onToggleDone={() => {}} />
-          ))}
-        </SortableContext>
+        {cards.map((card) => (
+          <CardItem key={card.id} card={card} onClick={onClick} />
+        ))}
       </div>
 
       {isAdding ? (

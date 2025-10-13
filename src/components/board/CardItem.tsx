@@ -1,56 +1,68 @@
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { Check } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Card as CardType } from "@/types/card";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { useToggleCardDone, useUpdateCard } from "@/hooks/useCard";
+import { useParams } from "react-router-dom";
+import { CardDetailModal } from "../CardDetailModal";
+import { useState, useRef, useEffect } from "react";
 
 interface CardItemProps {
   card: CardType;
-  onClick: () => void;
-  onToggleDone: (cardId: number, isDone: boolean) => void;
+  onClick?: (card: CardType) => void;
 }
 
-export function CardItem({ card, onClick, onToggleDone }: CardItemProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: card.id,
-    data: { type: "card", listId: card.listId },
-  });
+export function CardItem({ card, onClick }: CardItemProps) {
+  const { id } = useParams<{ id: string }>();
+  const boardId = Number(id);
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+  // Hooks
+  const toggleMutation = useToggleCardDone(boardId!);
+  const updateCardMutation = useUpdateCard();
+
+  // Modal state
+  const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // (Inline description edit state seems unused, but left for context)
+  const [isEditingDesc, setIsEditingDesc] = useState(false);
+  const [descValue, setDescValue] = useState(card.description || "");
+  const descInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditingDesc) {
+      descInputRef.current?.focus();
+    }
+  }, [isEditingDesc]);
+
+  // Open modal
+  const handleCardClick = (card: CardType) => {
+    setSelectedCard(card);
+    setIsModalOpen(true);
+  };
+
+  // Toggle done
+  const handleToggle = (cardId: number) => {
+    toggleMutation.mutate(cardId);
+  };
+
+  // Save description (for inline edit)
+  const saveDescription = () => {
+    if (!selectedCard) return;
+    updateCardMutation.mutate({
+      cardId: selectedCard.id,
+      data: { title: selectedCard.title, description: descValue },
+    });
+    setIsEditingDesc(false);
   };
 
   return (
-    <Card
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group"
-    >
-      <div className="flex items-start gap-2">
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleDone(card.id, !card.isDone);
-          }}
-          className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-        >
-          <Checkbox checked={card.isDone} />
-        </div>
-
-        <div
-          className="flex-1 min-w-0 cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick();
-          }}
-        >
-          <div className="flex items-start justify-between gap-2">
+    <>
+      <Card
+        className="p-3 cursor-pointer hover:shadow-md transition-all group relative"
+        onClick={() => handleCardClick(card)}
+      >
+        <div className="flex items-start justify-between gap-2">
+          {/* Left side: title + description */}
+          <div className="flex-1 min-w-0">
             <p
               className={`text-sm font-medium ${
                 card.isDone ? "line-through text-muted-foreground" : ""
@@ -59,19 +71,67 @@ export function CardItem({ card, onClick, onToggleDone }: CardItemProps) {
               {card.title}
             </p>
 
-            {card.isDone && (
-              <Badge variant="secondary" className="flex-shrink-0 gap-1">
-                <Check className="h-3 w-3" />
-                Done
-              </Badge>
+            {/* Inline description editor seems unused, left as is */}
+            {isEditingDesc && (
+              <input
+                ref={descInputRef}
+                type="text"
+                value={descValue}
+                onChange={(e) => setDescValue(e.target.value)}
+                onBlur={saveDescription}
+                onKeyDown={(e) => e.key === "Enter" && saveDescription()}
+                className="w-full text-xs mt-1 p-1 border border-gray-300 rounded"
+              />
             )}
           </div>
 
-          {card.description && (
-            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{card.description}</p>
-          )}
+          {/* Right side: checkbox */}
+          <div className="flex items-center gap-2">
+            {card.isDone ? (
+              <input
+                type="checkbox"
+                checked
+                readOnly
+                className="h-4 w-4 accent-primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggle(card.id);
+                }}
+              />
+            ) : (
+              <input
+                type="checkbox"
+                checked={false}
+                readOnly
+                className="h-4 w-4 accent-primary opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggle(card.id);
+                }}
+              />
+            )}
+          </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+
+      {/* Modal */}
+      {selectedCard && (
+        <CardDetailModal
+          card={selectedCard}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onUpdate={(cardId: number, updates: Partial<CardType>) => {
+            const data = {
+              title: updates.title ?? selectedCard.title,
+              // FIX 1: Use the selectedCard's description as a fallback, not the local state
+              description: updates.description ?? selectedCard.description,
+            };
+            updateCardMutation.mutate({ cardId, data });
+            // FIX 2: This line was causing the modal to close. It has been removed.
+            // setIsModalOpen(false);
+          }}
+        />
+      )}
+    </>
   );
 }
