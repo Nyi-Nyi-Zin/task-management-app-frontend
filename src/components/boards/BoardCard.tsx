@@ -24,7 +24,7 @@ export function BoardCard({ board, onClick, onDelete }: BoardCardProps) {
           <CardTitle className="text-lg">{board.title}</CardTitle>
         </CardHeader>
       </div>
-      <div className="flex justify-end items-center md:items-end">
+      <div className="flex justify-end items-center md:items-end p-2">
         <Button
           variant="ghost"
           size="sm"
@@ -32,18 +32,11 @@ export function BoardCard({ board, onClick, onDelete }: BoardCardProps) {
             e.stopPropagation();
             onDelete(e);
           }}
-          className="text-muted-foreground hover:text-white"
+          className="hover:bg-red-400 hover:text-white"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
-
-      {/* <CardFooter className=" bg-yellow-500 h-full text-sm text-muted-foreground px-4 py-2 mt-auto text-start"> */}
-      {/* <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4" />
-          <span>{format(new Date(board.createdAt), "MMM d, yyyy")}</span>
-        </div> */}
-      {/* </CardFooter> */}
     </Card>
   );
 }

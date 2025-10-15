@@ -5,7 +5,6 @@ export interface List {
   title: string;
   boardId: number;
   cards?: Card[];
-  position: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -16,5 +15,4 @@ export interface CreateListRequest {
 
 export interface UpdateListRequest {
   title?: string;
-  position: number;
 }

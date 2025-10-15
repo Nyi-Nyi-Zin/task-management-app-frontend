@@ -3,7 +3,7 @@ export interface Card {
   title: string;
   description?: string;
   listId: number;
-  position: number;
+
   isDone: boolean;
   createdAt?: string;
   updatedAt?: string;

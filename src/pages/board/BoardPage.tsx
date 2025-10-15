@@ -25,9 +25,6 @@ interface BoardPageProps {
 }
 
 export function BoardPage({ board, onCardClick, onBack, onLogout }: BoardPageProps) {
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
-
-  console.log(board.id);
   const createList = useCreateList(board.id);
   const deleteList = useDeleteList(board.id);
   const updateList = useUpdateList(board.id);
@@ -38,6 +35,7 @@ export function BoardPage({ board, onCardClick, onBack, onLogout }: BoardPagePro
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <BoardHeader
+        boardId={board.id}
         boardTitle={board.title}
         userName={board.user?.email || ""}
         onBack={onBack}

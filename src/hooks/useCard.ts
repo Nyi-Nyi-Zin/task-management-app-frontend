@@ -53,15 +53,16 @@ export const useUpdateCard = () => {
 };
 
 // ✅ Delete a card
-export const useDeleteCard = () => {
+export const useDeleteCard = (boardId: number) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ cardId }: { cardId: number }) => cardApi.deleteCard(cardId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["lists"] });
+      queryClient.invalidateQueries({ queryKey: BOARD_KEYS.detail(boardId) });
     },
   });
 };
+
 export const useToggleCardDone = (boardId?: number) => {
   const queryClient = useQueryClient();
 
